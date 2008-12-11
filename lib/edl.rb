@@ -7,7 +7,7 @@ module EDL
   
   # Represents an EDL, is returned from the parser. Traditional operation is functional style, i.e.
   #
-  #  edl.renumbered.without_dissolves.without_generators
+  #  edl.renumbered.without_transitions.without_generators
   class List
     attr_accessor :events, :fps
     
@@ -16,7 +16,7 @@ module EDL
     end
     
     # Return the same EDL with all dissolves stripped and replaced by the clips under them
-    def without_dissolves
+    def without_transitions
       # Find dissolves
       cpy = []
       
@@ -66,11 +66,23 @@ module EDL
     # changes have rippling effect on footage that comes after the timewarped clip
     # (so this is best used in concert with the original EDL where record TC is pristine)
     def without_timewarps
-      raise "Implement me"
+      self.class.new(
+        @events.map do | e |
+          
+          if e.has_timewarp?
+            repl = e.copy_properties_to(e.class.new)
+            from, to = e.timewarp.actual_src_start_tc, e.timewarp.actual_src_end_tc
+            repl.src_start_tc, repl.src_end_tc, repl.timewarp = from, to, nil
+            repl
+          else
+            e
+          end
+        end
+      )
     end
     
     # Return the same EDL without AX, BL and other GEN events (like slug, text and solids).
-    # Usually used in concert with "without_dissolves"
+    # Usually used in concert with "without_transitions"
     def without_generators
       gen_reels = %w(AX BL GEN)
       self.class.new(@events.reject{|e| gen_reels.include?(e.reel) })

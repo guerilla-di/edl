@@ -4,13 +4,13 @@ require 'test/unit'
 require 'flexmock'
 require 'flexmock/test_unit'
 
-TRAILER_EDL     = File.dirname(__FILE__) + '/samples/TRAILER_EDL.edl'
-SIMPLE_DISSOLVE = File.dirname(__FILE__) + '/samples/SIMPLE_DISSOLVE.EDL'
-SPLICEME        = File.dirname(__FILE__) + '/samples/SPLICEME.EDL'
-SIMPLE_TIMEWARP = File.dirname(__FILE__) + '/samples/TIMEWARP.EDL'
-SLOMO_TIMEWARP  = File.dirname(__FILE__) + '/samples/TIMEWARP_HALF.EDL'
-FORTY_FIVER     = File.dirname(__FILE__) + '/samples/45S_SAMPLE.EDL'
-REVERSE         = File.dirname(__FILE__) + '/samples/REVERSE.EDL'
+TRAILER_EDL      = File.dirname(__FILE__) + '/samples/TRAILER_EDL.edl'
+SIMPLE_DISSOLVE  = File.dirname(__FILE__) + '/samples/SIMPLE_DISSOLVE.EDL'
+SPLICEME         = File.dirname(__FILE__) + '/samples/SPLICEME.EDL'
+SIMPLE_TIMEWARP  = File.dirname(__FILE__) + '/samples/TIMEWARP.EDL'
+SLOMO_TIMEWARP   = File.dirname(__FILE__) + '/samples/TIMEWARP_HALF.EDL'
+FORTY_FIVER      = File.dirname(__FILE__) + '/samples/45S_SAMPLE.EDL'
+REVERSE          = File.dirname(__FILE__) + '/samples/REVERSE.EDL'
 
 class TestEvent < Test::Unit::TestCase
   def test_attributes_defined
@@ -47,7 +47,7 @@ class TestParser < Test::Unit::TestCase
     assert_kind_of EDL::Clip, second
     assert second.has_transition?
     
-    no_trans = @edl.without_dissolves
+    no_trans = @edl.without_transitions
     
     assert_equal 2, no_trans.events.length
     assert_equal (Timecode.parse('01:00:00:00') + 43).to_s, no_trans.events[0].rec_end_tc.to_s, 
@@ -257,5 +257,12 @@ end
 class ComplexTest < Test::Unit::TestCase
   def test_parses_cleanly
     assert_nothing_raised { EDL::Parser.new.parse(File.open(FORTY_FIVER)) }
+  end
+  
+  def test_bogus
+    edl = EDL::Parser.new.parse(File.open(FORTY_FIVER)).without_timewarps.without_transitions
+    edl.events.each do | e |
+      puts e.inspect
+    end
   end
 end
