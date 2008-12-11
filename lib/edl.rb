@@ -29,7 +29,7 @@ module EDL
           
           # The dissolve contains the OUTGOING clip, we are the INCOMING. Extend the
           # incoming clip by the length of the dissolve, that's the whole mission actually
-          incoming = e.copy_properties_to(Clip.new)
+          incoming = e.copy_properties_to(e.class.new)
           incoming.src_end_tc += len
           incoming.rec_end_tc += len
           
