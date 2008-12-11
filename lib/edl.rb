@@ -1,11 +1,11 @@
-require File.dirname(__FILE__) + "/../timecode/timecode"
+require File.dirname(__FILE__) + "/../../timecode/timecode"
 
 # A simplistic EDL parser. Current limitations: no support for DF timecode, no support for audio
 module EDL
   
   # Represents an EDL, is returned from the parser. Traditional operation is functional style, i.e.
   #
-  #  edl.renumbeder.without_dissolves.without_generators.as_edit_of(another_edl)
+  #  edl.renumbered.without_dissolves.without_generators.as_edit_of(another_edl)...
   class List
     attr_accessor :events
     def initialize(events = [])
@@ -16,16 +16,12 @@ module EDL
     def without_dissolves
       # Find dissolves
       cpy = []
-      accum_offset = 0
       
       @events.each_with_index do | e, i |
         # A dissolve always FOLLOWS the incoming clip
-        if @events[i+1].is_a?(Transition)
+        if @events[i+1] && @events[i+1].has_transition?
           dissolve = @events[i+1]
-          len = dissolve.duration.to_i
-          
-          # Shift all events to the right
-          accum_offset += len
+          len = dissolve.transition.duration.to_i
           
           # The dissolve contains the OUTGOING clip, we are the INCOMING. Extend the
           # incoming clip by the length of the dissolve, that's the whole mission actually
@@ -41,7 +37,7 @@ module EDL
           # Take care to join the two if they overlap - TODO
           cpy << incoming
           cpy << outgoing
-        elsif e.is_a?(Transition)
+        elsif e.has_transition?
           # Skip, already handled!
         else
           cpy << e.dup
@@ -121,17 +117,41 @@ module EDL
   
   class Clip < Event
     attr_accessor :clip_name, :timewarp_speed
+    attr_accessor :transition
+    
+    # Returns true if the clip starts with a transiton (not a jump cut)
+    def has_transition?
+      !transition.nil?
+    end
+    
+    def has_timewarp?
+      false
+    end
+    
+    def black?
+      reel == 'BL'
+    end
+    
+    def generator?
+      black? || (%(AX GEN).include?(reel))
+    end
   end
   
-  class VideoClip < Clip; end
-  
-  class Transition < Event
-    attr_accessor :effect, :duration, :timewarp_speed, :clip_name
+  # Represents a transition. We currently only support dissolves and SMPTE wipes
+  # Will be avilable as EDL::Clip#transition
+  class Transition
+    attr_accessor :duration, :effect
   end
   
-  class Black < Clip; end
-  class Generator < Clip; end
+  # Represents a dissolve
+  class Dissolve < Transition
+  end
   
+  class Wipe < Transition
+    attr_accessor :smpte_wipe_index # SMPTE wipe idx
+  end
+
+  # A generic matcher
   class Matcher
     class ApplyError < RuntimeError
       def initialize(msg, line)
@@ -172,7 +192,7 @@ module EDL
     end
     
     def apply(stack, current_event, line)
-      current_event.effect = line.scan(@regexp).flatten.pop.strip
+      current_event.transition.effect = line.scan(@regexp).flatten.pop.strip
     end
   end
   
@@ -238,11 +258,11 @@ module EDL
       matches.shift
 
       # Then the type
-      props[:type] = matches.shift
+      props[:transition] = matches.shift
       matches.shift
       
       # Then the optional generator group - skip for now
-      if props[:type] == 'D'
+      if props[:transition] != 'C'
         props[:duration] = matches.shift.strip
       else
         matches.shift
@@ -253,29 +273,29 @@ module EDL
       [:src_start_tc, :src_end_tc, :rec_start_tc, :rec_end_tc].each do | k |
         begin
           props[k] = EDL::Parser.timecode_from_line_elements(matches)
-        rescue Timecode::Error
-          raise "Cannot parse timecode in #{line}"
+        rescue Timecode::Error => e 
+          raise ApplyError, "Cannot parse timecode - #{e}", line
         end
       end
       
-      evt = case props.delete(:type)
-        when 'C'
-          if props[:track] == 'V'
-            if props[:reel] == 'BL'
-              Black.new
-            elsif props[:reel] == 'AX'
-              Generator.new
-            else
-              VideoClip.new
-            end
-          else
-            AudioClip.new
-          end
+      # This desperatly needs refactoring :-( so that there's no Transition anymore
+      evt = Clip.new
+      transition_idx = props.delete(:transition)
+      tran = case transition_idx
         when 'D'
-          Transition.new
+          d = Dissolve.new
+          d.duration = props.delete(:duration)
+          d
+        when /W/
+          w = Wipe.new
+          w.duration = props.delete(:duration)
+          w.smpte_wipe_index = transition_idx.gsub(/W/, '')
+          w
         else
-          Event.new
+          nil
       end
+      evt.transition = tran
+      
       props.each_pair { | k, v | evt.send("#{k}=", v) }
       evt
     end

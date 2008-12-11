@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../edl'
+require File.dirname(__FILE__) + '/../lib/edl'
 require 'rubygems'
 require 'test/unit'
 require 'flexmock'
@@ -41,7 +41,8 @@ class TestParser < Test::Unit::TestCase
     assert_kind_of EDL::Clip, first
     
     second = @edl.events[1]
-    assert_kind_of EDL::Transition, second
+    assert_kind_of EDL::Clip, second
+    assert second.has_transition?
     
     no_trans = @edl.without_dissolves
     
@@ -106,12 +107,34 @@ class EventMatcherTest < Test::Unit::TestCase
       '025  GEN      V     D    025 00:00:55:10 00:00:58:11 01:00:29:19 01:00:32:20'
     )
     assert_not_nil dissolve
-    assert_kind_of EDL::Transition, dissolve
+    assert_kind_of EDL::Clip, dissolve
     assert_equal '025', dissolve.num
     assert_equal 'GEN', dissolve.reel
     assert_equal 'V', dissolve.track
-    assert_equal '025', dissolve.duration
-    assert_equal '025  GEN      V     D    025 00:00:55:10 00:00:58:11 01:00:29:19 01:00:32:20', dissolve.original_line
+    
+    assert dissolve.has_transition?
+    assert_not_nil dissolve.transition
+    assert_kind_of EDL::Dissolve, dissolve.transition
+    assert_equal '025', dissolve.transition.duration
+  end
+
+  def test_wipe_generation_from_line
+    m = EDL::EventMatcher.new
+    wipe = m.apply(nil, nil,
+      '025  GEN      V     W001  025 00:00:55:10 00:00:58:11 01:00:29:19 01:00:32:20'
+    )
+    assert_not_nil wipe
+    assert_kind_of EDL::Clip, wipe
+    assert_equal '025', wipe.num
+    assert_equal 'GEN', wipe.reel
+    assert_equal 'V', wipe.track
+    
+    assert wipe.has_transition?
+    
+    assert_not_nil wipe.transition
+    assert_kind_of EDL::Wipe, wipe.transition
+    assert_equal '025', wipe.transition.duration
+    assert_equal '001', wipe.transition.smpte_wipe_index
   end
   
   def test_black_generation_from_line
@@ -120,7 +143,7 @@ class EventMatcherTest < Test::Unit::TestCase
       '025        BL V     C        00:00:00:00 00:00:00:00 01:00:29:19 01:00:29:19' 
     )
     assert_not_nil black
-    assert_kind_of EDL::Black, black
+    assert black.black?, "Should be black?"
     assert_equal '025', black.num
     assert_equal 'BL', black.reel
     assert_equal 'V', black.track
@@ -156,8 +179,11 @@ class EffectMatcherTest < Test::Unit::TestCase
   
   def test_apply
     line = "* EFFECT NAME: CROSS DISSOLVE"
-    mok_evt = flexmock
-    mok_evt.should_receive(:effect=).with('CROSS DISSOLVE').once
+    mok_evt, mok_transition = flexmock, flexmock
+    
+    mok_evt.should_receive(:transition).once.and_return(mok_transition)
+    mok_transition.should_receive(:effect=).with("CROSS DISSOLVE").once
+    
     EDL::EffectMatcher.new.apply([], mok_evt, line)
   end
 end
