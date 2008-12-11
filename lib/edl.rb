@@ -136,6 +136,10 @@ module EDL
     end
     alias_method :slug?, :black?
     
+    def length
+      (src_end_tc - src_start_tc).to_i
+    end
+    
     def generator?
       black? || (%(AX GEN).include?(reel))
     end
@@ -162,15 +166,19 @@ module EDL
     attr_accessor :clip
     
     def speed_in_percent
-      (25.0 / actual_framerate.to_f) * 100
+      (actual_framerate.to_f / DEFAULT_FPS.to_f ) * 100
     end
     
     # Get the actual end of source that is needed for the timewarp to be computed properly,
     # round up to not generate stills at ends of clips
     def actual_src_end_tc
+      clip.src_start_tc + actual_length_of_source
+    end
+    
+    # Returns the true number of frames that is needed to complete the timewarp edit
+    def actual_length_of_source
       length_in_edit = (clip.src_end_tc - clip.src_start_tc).to_i
-      actual_len  = ((length_in_edit / 25.0) * actual_framerate).ceil
-      clip.src_start_tc + actual_len
+      ((length_in_edit / 25.0) * actual_framerate).ceil
     end
   end
   

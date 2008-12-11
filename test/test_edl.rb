@@ -8,6 +8,7 @@ TRAILER_EDL     = File.dirname(__FILE__) + '/samples/TRAILER_EDL.edl'
 SIMPLE_DISSOLVE = File.dirname(__FILE__) + '/samples/SIMPLE_DISSOLVE.edl'
 SPLICEME        = File.dirname(__FILE__) + '/samples/SPLICEME.edl'
 SIMPLE_TIMEWARP = File.dirname(__FILE__) + '/samples/TIMEWARP.edl'
+SLOMO_TIMEWARP = File.dirname(__FILE__) + '/samples/TIMEWARP_HALF.edl'
 
 class TestEvent < Test::Unit::TestCase
   def test_attributes_defined
@@ -65,6 +66,7 @@ class TestParser < Test::Unit::TestCase
 end
 
 class TimewarpMatcherTest < Test::Unit::TestCase
+
   def test_parses_as_one_event
     @edl = EDL::Parser.new.parse(File.open(SIMPLE_TIMEWARP))
     assert_kind_of EDL::List, @edl
@@ -83,8 +85,22 @@ class TimewarpMatcherTest < Test::Unit::TestCase
 
     assert clip.timewarp.actual_src_end_tc > clip.src_end_tc
     assert_equal "03:03:24:18", clip.timewarp.actual_src_end_tc.to_s
+    assert_equal 124, clip.timewarp.actual_length_of_source
   end
+  
+  def test_timwarp_slomo
+    @edl = EDL::Parser.new.parse(File.open(SLOMO_TIMEWARP))
+    clip = @edl.events[0]
+    assert clip.has_timewarp?, "Should respond true to has_timewarp?"
+    assert_not_nil clip.timewarp
+    assert_kind_of EDL::Timewarp, clip.timewarp
 
+    assert clip.timewarp.actual_src_end_tc < clip.src_end_tc
+    assert_equal "03:03:19:24", clip.timewarp.actual_src_end_tc.to_s
+    assert_equal 10, clip.length
+    assert_equal 5, clip.timewarp.actual_length_of_source
+    assert_equal 50, clip.timewarp.speed_in_percent.to_i
+  end
 end
 
 class EventMatcherTest < Test::Unit::TestCase
