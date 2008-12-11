@@ -5,10 +5,12 @@ require 'flexmock'
 require 'flexmock/test_unit'
 
 TRAILER_EDL     = File.dirname(__FILE__) + '/samples/TRAILER_EDL.edl'
-SIMPLE_DISSOLVE = File.dirname(__FILE__) + '/samples/SIMPLE_DISSOLVE.edl'
-SPLICEME        = File.dirname(__FILE__) + '/samples/SPLICEME.edl'
-SIMPLE_TIMEWARP = File.dirname(__FILE__) + '/samples/TIMEWARP.edl'
-SLOMO_TIMEWARP = File.dirname(__FILE__) + '/samples/TIMEWARP_HALF.edl'
+SIMPLE_DISSOLVE = File.dirname(__FILE__) + '/samples/SIMPLE_DISSOLVE.EDL'
+SPLICEME        = File.dirname(__FILE__) + '/samples/SPLICEME.EDL'
+SIMPLE_TIMEWARP = File.dirname(__FILE__) + '/samples/TIMEWARP.EDL'
+SLOMO_TIMEWARP  = File.dirname(__FILE__) + '/samples/TIMEWARP_HALF.EDL'
+FORTY_FIVER     = File.dirname(__FILE__) + '/samples/45S_SAMPLE.EDL'
+REVERSE         = File.dirname(__FILE__) + '/samples/REVERSE.EDL'
 
 class TestEvent < Test::Unit::TestCase
   def test_attributes_defined
@@ -86,6 +88,8 @@ class TimewarpMatcherTest < Test::Unit::TestCase
     assert clip.timewarp.actual_src_end_tc > clip.src_end_tc
     assert_equal "03:03:24:18", clip.timewarp.actual_src_end_tc.to_s
     assert_equal 124, clip.timewarp.actual_length_of_source
+    assert !clip.timewarp.reverse?
+    
   end
   
   def test_timwarp_slomo
@@ -100,6 +104,27 @@ class TimewarpMatcherTest < Test::Unit::TestCase
     assert_equal 10, clip.length
     assert_equal 5, clip.timewarp.actual_length_of_source
     assert_equal 50, clip.timewarp.speed_in_percent.to_i
+    assert !clip.timewarp.reverse?
+    
+  end
+end
+
+class ReverseTimewarpTest < Test::Unit::TestCase
+  def test_parse
+    @edl = EDL::Parser.new.parse(File.open(REVERSE))
+    assert_equal 1, @edl.events.length
+    
+    clip = @edl.events[0]
+    assert_equal 52, clip.length
+    
+    assert clip.has_timewarp?, "Should respond true to has_timewarp?"
+    tw = clip.timewarp
+    
+    assert_equal -25, tw.actual_framerate.to_i
+    assert tw.reverse?
+    assert_equal clip.length, tw.actual_length_of_source
+    assert_equal clip.src_start_tc, tw.actual_src_end_tc
+    assert_equal clip.src_start_tc - 52, tw.actual_src_start_tc
   end
 end
 
@@ -224,5 +249,11 @@ class EffectMatcherTest < Test::Unit::TestCase
     mok_transition.should_receive(:effect=).with("CROSS DISSOLVE").once
     
     EDL::EffectMatcher.new.apply([], mok_evt, line)
+  end
+end
+
+class ComplexTest < Test::Unit::TestCase
+  def test_parses_cleanly
+    assert_nothing_raised { EDL::Parser.new.parse(File.open(FORTY_FIVER)) }
   end
 end
