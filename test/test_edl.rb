@@ -4,6 +4,10 @@ require 'test/unit'
 require 'flexmock'
 require 'flexmock/test_unit'
 
+TRAILER_EDL     = File.dirname(__FILE__) + '/samples/TRAILER_EDL.edl'
+SIMPLE_DISSOLVE = File.dirname(__FILE__) + '/samples/SIMPLE_DISSOLVE.edl'
+SPLICEME        = File.dirname(__FILE__) + '/samples/SPLICEME.edl'
+SIMPLE_TIMEWARP = File.dirname(__FILE__) + '/samples/TIMEWARP.edl'
 
 class TestEvent < Test::Unit::TestCase
   def test_attributes_defined
@@ -19,16 +23,12 @@ class TestParser < Test::Unit::TestCase
     assert_nothing_raised { EDL::Parser.new }
   end
   
-  TRAILER_EDL = File.dirname(__FILE__) + '/samples/TRAILER_EDL.edl'
-  SIMPLE_DISSOLVE = File.dirname(__FILE__) + '/samples/SIMPLE_DISSOLVE.edl'
-  SPLICEME = File.dirname(__FILE__) + '/samples/SPLICEME.edl'
-  
   def test_timecode_from_elements
     elems = ["08", "04", "24", "24"]
     assert_nothing_raised { @tc = EDL::Parser.timecode_from_line_elements(elems) }
     assert_kind_of Timecode, @tc
     assert_equal "08:04:24:24", @tc.to_s
-    assert elems.empty?, "The elements should have been removed from the array"
+    assert elems.empty?, "The elements used for timecode should have been removed from the array"
   end
   
   def test_dissolve
@@ -65,9 +65,26 @@ class TestParser < Test::Unit::TestCase
 end
 
 class TimewarpMatcherTest < Test::Unit::TestCase
-  def test_needs_to_be_written
-    flunk
+  def test_parses_as_one_event
+    @edl = EDL::Parser.new.parse(File.open(SIMPLE_TIMEWARP))
+    assert_kind_of EDL::List, @edl
+    assert_equal 1, @edl.events.length
   end
+
+  def test_timewarp_attributes
+    @edl = EDL::Parser.new.parse(File.open(SIMPLE_TIMEWARP))
+    assert_kind_of EDL::List, @edl
+    assert_equal 1, @edl.events.length
+    
+    clip = @edl.events[0]
+    assert clip.has_timewarp?, "Should respond true to has_timewarp?"
+    assert_not_nil clip.timewarp
+    assert_kind_of EDL::Timewarp, clip.timewarp
+
+    assert clip.timewarp.actual_src_end_tc > clip.src_end_tc
+    assert_equal "03:03:24:18", clip.timewarp.actual_src_end_tc.to_s
+  end
+
 end
 
 class EventMatcherTest < Test::Unit::TestCase
@@ -125,6 +142,7 @@ class EventMatcherTest < Test::Unit::TestCase
     )
     assert_not_nil wipe
     assert_kind_of EDL::Clip, wipe
+    assert wipe.generator?
     assert_equal '025', wipe.num
     assert_equal 'GEN', wipe.reel
     assert_equal 'V', wipe.track
@@ -142,8 +160,13 @@ class EventMatcherTest < Test::Unit::TestCase
     black = m.apply(nil, nil,
       '025        BL V     C        00:00:00:00 00:00:00:00 01:00:29:19 01:00:29:19' 
     )
+    
     assert_not_nil black
-    assert black.black?, "Should be black?"
+    
+    assert black.black?, "Black should be black?"
+    assert black.slug?, "Black should be slug?"
+    
+    assert black.generator?, "Should be generator?"
     assert_equal '025', black.num
     assert_equal 'BL', black.reel
     assert_equal 'V', black.track

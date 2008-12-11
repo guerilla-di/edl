@@ -1,13 +1,16 @@
 require File.dirname(__FILE__) + "/../../timecode/timecode"
 
-# A simplistic EDL parser. Current limitations: no support for DF timecode, no support for audio
+# A simplistic EDL parser. Current limitations: no support for DF timecode, no support for audio,
+# no support for split edits, no support for key effects
 module EDL
+  DEFAULT_FPS = 25
   
   # Represents an EDL, is returned from the parser. Traditional operation is functional style, i.e.
   #
-  #  edl.renumbered.without_dissolves.without_generators.as_edit_of(another_edl)...
+  #  edl.renumbered.without_dissolves.without_generators
   class List
-    attr_accessor :events
+    attr_accessor :events, :fps
+    
     def initialize(events = [])
       @events = events.dup
     end
@@ -116,7 +119,7 @@ module EDL
   end
   
   class Clip < Event
-    attr_accessor :clip_name, :timewarp_speed
+    attr_accessor :clip_name, :timewarp
     attr_accessor :transition
     
     # Returns true if the clip starts with a transiton (not a jump cut)
@@ -125,12 +128,13 @@ module EDL
     end
     
     def has_timewarp?
-      false
+      !timewarp.nil?
     end
     
     def black?
       reel == 'BL'
     end
+    alias_method :slug?, :black?
     
     def generator?
       black? || (%(AX GEN).include?(reel))
@@ -147,10 +151,29 @@ module EDL
   class Dissolve < Transition
   end
   
+  # Represents an SMPTE wipe
   class Wipe < Transition
     attr_accessor :smpte_wipe_index # SMPTE wipe idx
   end
-
+  
+  # Represents a timewarp
+  class Timewarp
+    attr_accessor :actual_framerate
+    attr_accessor :clip
+    
+    def speed_in_percent
+      (25.0 / actual_framerate.to_f) * 100
+    end
+    
+    # Get the actual end of source that is needed for the timewarp to be computed properly,
+    # round up to not generate stills at ends of clips
+    def actual_src_end_tc
+      length_in_edit = (clip.src_end_tc - clip.src_start_tc).to_i
+      actual_len  = ((length_in_edit / 25.0) * actual_framerate).ceil
+      clip.src_start_tc + actual_len
+    end
+  end
+  
   # A generic matcher
   class Matcher
     class ApplyError < RuntimeError
@@ -219,9 +242,10 @@ module EDL
       unless evt_with_tw
         raise ApplyError, "Cannot find event marked by timewarp", line
       else
-        evt_with_tw.timewarp_speed = (25.0/100.0) * fps.to_f
+        tw = Timewarp.new
+        tw.actual_framerate, tw.clip = fps.to_f, evt_with_tw
+        evt_with_tw.timewarp = tw
       end
-      
     end
   end
   
@@ -310,17 +334,17 @@ module EDL
     ]
     
     def parse(io)
-      @stack, cur_evt = [], nil
+      stack, cur_evt = [], nil
       until io.eof?
         current_line = io.gets.strip
         MATCHERS.each do | matcher |
           next unless matcher.matches?(current_line)
           if matcher.signals_new_event?
-            @stack.push(cur_evt) if cur_evt # Start afresh
-            cur_evt = matcher.apply(@stack, cur_evt, current_line)
+            stack.push(cur_evt) if cur_evt # Start afresh
+            cur_evt = matcher.apply(stack, cur_evt, current_line)
           else
             begin
-              matcher.apply(@stack, cur_evt, current_line)
+              matcher.apply(stack, cur_evt, current_line)
             rescue Matcher::ApplyError => e
               STDERR.puts "Cannot parse #{current_line} - #{e}"
             end
@@ -329,8 +353,8 @@ module EDL
       end
       
       # The last remaining event
-      @stack.push(cur_evt) if cur_evt
-      return List.new(@stack)
+      stack.push(cur_evt) if cur_evt
+      return List.new(stack)
     end
     
     def self.timecode_from_line_elements(elements)
