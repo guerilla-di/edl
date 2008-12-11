@@ -21,6 +21,14 @@ class TestEvent < Test::Unit::TestCase
   end
 end
 
+class Test::Unit::TestCase
+  def parse_evt(matcher_klass, line)
+    stack = []
+    matcher_klass.new.apply(stack, line)
+    stack.pop
+  end
+end
+
 class TestParser < Test::Unit::TestCase
   def test_inst
     assert_nothing_raised { EDL::Parser.new }
@@ -28,9 +36,10 @@ class TestParser < Test::Unit::TestCase
   
   def test_timecode_from_elements
     elems = ["08", "04", "24", "24"]
-    assert_nothing_raised { @tc = EDL::Parser.timecode_from_line_elements(elems) }
+    assert_nothing_raised { @tc = EDL::Parser.timecode_from_line_elements(elems, 30) }
     assert_kind_of Timecode, @tc
     assert_equal "08:04:24:24", @tc.to_s
+    assert_equal 30, @tc.fps
     assert elems.empty?, "The elements used for timecode should have been removed from the array"
   end
   
@@ -145,7 +154,7 @@ class EventMatcherTest < Test::Unit::TestCase
   def test_clip_generation_from_line
     m = EDL::EventMatcher.new
     
-    clip = m.apply(nil, nil,
+    clip = m.apply([],
       '020  008C     V     C        08:04:24:24 08:04:25:19 01:00:25:22 01:00:26:17'
     )
     
@@ -163,7 +172,7 @@ class EventMatcherTest < Test::Unit::TestCase
   
   def test_dissolve_generation_from_line
     m = EDL::EventMatcher.new
-    dissolve = m.apply(nil, nil,
+    dissolve = m.apply([],
       '025  GEN      V     D    025 00:00:55:10 00:00:58:11 01:00:29:19 01:00:32:20'
     )
     assert_not_nil dissolve
@@ -180,7 +189,7 @@ class EventMatcherTest < Test::Unit::TestCase
 
   def test_wipe_generation_from_line
     m = EDL::EventMatcher.new
-    wipe = m.apply(nil, nil,
+    wipe = m.apply([],
       '025  GEN      V     W001  025 00:00:55:10 00:00:58:11 01:00:29:19 01:00:32:20'
     )
     assert_not_nil wipe
@@ -200,7 +209,7 @@ class EventMatcherTest < Test::Unit::TestCase
   
   def test_black_generation_from_line
     m = EDL::EventMatcher.new
-    black = m.apply(nil, nil,
+    black = m.apply([],
       '025        BL V     C        00:00:00:00 00:00:00:00 01:00:29:19 01:00:29:19' 
     )
     
@@ -233,7 +242,7 @@ class ClipNameMatcherTest < Test::Unit::TestCase
     line = "* FROM CLIP NAME:  TAPE_6-10.MOV"
     mok_evt = flexmock
     mok_evt.should_receive(:clip_name=).with('TAPE_6-10.MOV').once
-    EDL::NameMatcher.new.apply([], mok_evt, line)
+    EDL::NameMatcher.new.apply([mok_evt], line)
   end
 end
 
@@ -250,19 +259,12 @@ class EffectMatcherTest < Test::Unit::TestCase
     mok_evt.should_receive(:transition).once.and_return(mok_transition)
     mok_transition.should_receive(:effect=).with("CROSS DISSOLVE").once
     
-    EDL::EffectMatcher.new.apply([], mok_evt, line)
+    EDL::EffectMatcher.new.apply([], line)
   end
 end
 
 class ComplexTest < Test::Unit::TestCase
   def test_parses_cleanly
     assert_nothing_raised { EDL::Parser.new.parse(File.open(FORTY_FIVER)) }
-  end
-  
-  def test_bogus
-    edl = EDL::Parser.new.parse(File.open(FORTY_FIVER)).without_timewarps.without_transitions
-    edl.events.each do | e |
-      puts e.inspect
-    end
   end
 end

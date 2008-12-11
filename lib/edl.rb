@@ -222,15 +222,11 @@ module EDL
       @regexp = with_regexp
     end
     
-    def signals_new_event?
-      false
-    end
-    
     def matches?(line)
       line =~ @regexp
     end
     
-    def apply(stack, current_event, line)
+    def apply(stack, line)
       STDERR.puts "Skipping #{line}"
     end
   end
@@ -240,8 +236,8 @@ module EDL
       super(/\* FROM CLIP NAME:(\s+)(.+)/)
     end
     
-    def apply(stack, current_event, line)
-      current_event.clip_name = line.scan(@regexp).flatten.pop.strip
+    def apply(stack, line)
+      stack[-1].clip_name = line.scan(@regexp).flatten.pop.strip
     end
   end
   
@@ -250,8 +246,8 @@ module EDL
       super(/\* EFFECT NAME:(\s+)(.+)/)
     end
     
-    def apply(stack, current_event, line)
-      current_event.transition.effect = line.scan(@regexp).flatten.pop.strip
+    def apply(stack, line)
+      stack[-1].transition.effect = line.scan(@regexp).flatten.pop.strip
     end
   end
   
@@ -260,20 +256,20 @@ module EDL
       @regexp = /M2(\s+)(\w+)(\s+)(\-?\d+\.\d+)(\s+)(\d{1,2}):(\d{1,2}):(\d{1,2}):(\d{1,2})/
     end
     
-    def apply(stack, current_event, line)
-      all_evts = stack + [current_event]
+    def apply(stack, line)
       matches = line.scan(@regexp).flatten.map{|e| e.strip}.reject{|e| e.nil? || e.empty?}
       
       from_reel = matches.shift
       fps = matches.shift
       
       begin
-        tw_start_source_tc = Parser.timecode_from_line_elements(matches)
+        # FIXME
+        tw_start_source_tc = Parser.timecode_from_line_elements(matches, DEFAULT_FPS)
       rescue Timecode::Error => e
         raise ApplyError, "Invalid TC in timewarp (#{e})", line
       end
       
-      evt_with_tw = all_evts.reverse.find{|e| e.src_start_tc == tw_start_source_tc && e.reel == from_reel }
+      evt_with_tw = stack.reverse.find{|e| e.src_start_tc == tw_start_source_tc && e.reel == from_reel }
 
       unless evt_with_tw
         raise ApplyError, "Cannot find event marked by timewarp", line
@@ -289,9 +285,6 @@ module EDL
   TC = /(\d{1,2}):(\d{1,2}):(\d{1,2}):(\d{1,2})/
   
   class EventMatcher < Matcher
-    def signals_new_event?
-      true
-    end
 
     # 021  009      V     C        00:39:04:21 00:39:05:09 01:00:26:17 01:00:27:05
     EVENT_PAT = /(\d+)(\s+)(\w+)(\s+)(\w+)(\s+)(\w+)(\s+)((\w+\s+)?)#{TC} #{TC} #{TC} #{TC}/
@@ -300,7 +293,7 @@ module EDL
       super(EVENT_PAT)
     end
     
-    def apply(stack, cur_evt, line)
+    def apply(stack, line)
       
       matches = line.scan(@regexp).shift
       props = {:original_line => line}
@@ -332,16 +325,16 @@ module EDL
       # Then the timecodes
       [:src_start_tc, :src_end_tc, :rec_start_tc, :rec_end_tc].each do | k |
         begin
-          props[k] = EDL::Parser.timecode_from_line_elements(matches)
+          # FIXME
+          props[k] = EDL::Parser.timecode_from_line_elements(matches, DEFAULT_FPS)
         rescue Timecode::Error => e 
           raise ApplyError, "Cannot parse timecode - #{e}", line
         end
       end
       
-      # This desperatly needs refactoring :-( so that there's no Transition anymore
       evt = Clip.new
       transition_idx = props.delete(:transition)
-      tran = case transition_idx
+      evt.transition = case transition_idx
         when 'D'
           d = Dissolve.new
           d.duration = props.delete(:duration)
@@ -354,10 +347,11 @@ module EDL
         else
           nil
       end
-      evt.transition = tran
       
       props.each_pair { | k, v | evt.send("#{k}=", v) }
-      evt
+      
+      stack << evt
+      evt # FIXME - we dont need to return this is only used by tests
     end
   end
   
@@ -370,31 +364,25 @@ module EDL
     ]
     
     def parse(io)
-      stack, cur_evt = [], nil
+      stack = []
       until io.eof?
         current_line = io.gets.strip
         MATCHERS.each do | matcher |
           next unless matcher.matches?(current_line)
-          if matcher.signals_new_event?
-            stack.push(cur_evt) if cur_evt # Start afresh
-            cur_evt = matcher.apply(stack, cur_evt, current_line)
-          else
-            begin
-              matcher.apply(stack, cur_evt, current_line)
-            rescue Matcher::ApplyError => e
-              STDERR.puts "Cannot parse #{current_line} - #{e}"
-            end
+          
+          begin
+            matcher.apply(stack, current_line)
+          rescue Matcher::ApplyError => e
+            STDERR.puts "Cannot parse #{current_line} - #{e}"
           end
         end
       end
       
-      # The last remaining event
-      stack.push(cur_evt) if cur_evt
       return List.new(stack)
     end
     
-    def self.timecode_from_line_elements(elements)
-      args = (0..3).map{|_| elements.shift.to_i} + [@fps || 25]
+    def self.timecode_from_line_elements(elements, fps)
+      args = (0..3).map{|_| elements.shift.to_i} + [fps]
       Timecode.at(*args)
     end
   end
