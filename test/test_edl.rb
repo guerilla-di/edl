@@ -125,6 +125,8 @@ class ReverseTimewarpTest < Test::Unit::TestCase
     assert_equal clip.length, tw.actual_length_of_source
     assert_equal clip.src_start_tc, tw.actual_src_end_tc
     assert_equal clip.src_start_tc - 52, tw.actual_src_start_tc
+    assert_equal -100, clip.timewarp.speed_in_percent.to_i
+    
   end
 end
 
