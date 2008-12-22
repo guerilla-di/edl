@@ -1,4 +1,6 @@
 require File.dirname(__FILE__) + '/../lib/edl'
+require File.dirname(__FILE__) + '/../lib/edl/cutter'
+require File.dirname(__FILE__) + '/../lib/edl/grabber'
 require 'rubygems'
 require 'test/unit'
 require 'flexmock'
@@ -259,12 +261,32 @@ class EffectMatcherTest < Test::Unit::TestCase
     mok_evt.should_receive(:transition).once.and_return(mok_transition)
     mok_transition.should_receive(:effect=).with("CROSS DISSOLVE").once
     
-    EDL::EffectMatcher.new.apply([], line)
+    EDL::EffectMatcher.new.apply([mok_evt], line)
   end
 end
 
 class ComplexTest < Test::Unit::TestCase
   def test_parses_cleanly
     assert_nothing_raised { EDL::Parser.new.parse(File.open(FORTY_FIVER)) }
+  end
+  
+  def test_from_zero
+    complex = EDL::Parser.new.parse(File.open(FORTY_FIVER))
+    
+    from_zero = complex.from_zero
+    assert_equal '00:00:00:00', from_zero.events[0].rec_start_tc.to_s,
+      "The starting timecode of the first event should have been shifted to zero"
+    assert_equal '00:00:42:16', from_zero.events[-1].rec_end_tc.to_s,
+      "The ending timecode of the last event should have been shifted 10 hours back"
+  end
+end
+
+class GrabberTest < Test::Unit::TestCase
+  FILM = '/Users/julik/Downloads/HC_CORRECT-TCS_VIDEO1.edl.txt'
+  def test_cutter
+    complex = EDL::Parser.new.parse(File.open(FILM))
+    cutter = EDL::Grabber.new("/Users/julik/Desktop/Cutto/HC_CORRECT-TCS.mov")
+    cutter.ffmpeg_bin = '/opt/local/bin/ffmpeg'
+    cutter.grab(complex)
   end
 end

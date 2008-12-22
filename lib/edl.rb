@@ -1,7 +1,8 @@
-require File.dirname(__FILE__) + "/../../timecode/timecode"
+require "rubygems"
+require "timecode"
 
 # A simplistic EDL parser. Current limitations: no support for DF timecode, no support for audio,
-# no support for split edits, no support for key effects
+# no support for split edits, no support for key effects, no support for audio
 module EDL
   DEFAULT_FPS = 25
   
@@ -61,7 +62,7 @@ module EDL
       puts x.inspect
       x
     end
-    
+        
     # Return the same EDL with all timewarps expanded to native length. Clip length
     # changes have rippling effect on footage that comes after the timewarped clip
     # (so this is best used in concert with the original EDL where record TC is pristine)
@@ -84,10 +85,30 @@ module EDL
     # Return the same EDL without AX, BL and other GEN events (like slug, text and solids).
     # Usually used in concert with "without_transitions"
     def without_generators
-      gen_reels = %w(AX BL GEN)
-      self.class.new(@events.reject{|e| gen_reels.include?(e.reel) })
+      self.class.new(@events.reject{|e| e.generator? })
     end
     
+    # Return the list of clips used by this EDL at full capture length
+    def capture_list
+      without_generators.without_timewarps.spliced.from_zero
+    end
+    
+    # Return the same EDL with the first event starting at 00:00:00:00 and all subsequent events
+    # shifted accordingly
+    def from_zero
+      shift_by = @events[0].rec_start_tc
+      self.class.new(
+        @events.map do | original |
+          e = original.dup
+          e.rec_start_tc =  (e.rec_start_tc - shift_by)
+          e.rec_end_tc =  (e.rec_end_tc - shift_by)
+          e
+        end
+      )
+    end
+    
+    # Return the same EDL with neighbouring clips joined at cuts where applicable (if a clip
+    # is divided in two pieces it will be spliced). Most useful in combination with without_timewarps
     def spliced
       spliced_edl = @events.inject([]) do | spliced, cur  |
         latest = spliced[-1]
@@ -164,12 +185,11 @@ module EDL
   end
   
   # Represents a dissolve
-  class Dissolve < Transition
-  end
+  class Dissolve < Transition; end
   
   # Represents an SMPTE wipe
   class Wipe < Transition
-    attr_accessor :smpte_wipe_index # SMPTE wipe idx
+    attr_accessor :smpte_wipe_index
   end
   
   # Represents a timewarp
@@ -356,18 +376,15 @@ module EDL
   end
   
   class Parser
-    MATCHERS = [
-      EventMatcher.new,
-      EffectMatcher.new,
-      NameMatcher.new,
-      TimewarpMatcher.new,
-    ]
+    def get_matchers
+      [ EventMatcher.new, EffectMatcher.new, NameMatcher.new, TimewarpMatcher.new ]
+    end
     
     def parse(io)
-      stack = []
+      stack, matchers = [], get_matchers
       until io.eof?
         current_line = io.gets.strip
-        MATCHERS.each do | matcher |
+        matchers.each do | matcher |
           next unless matcher.matches?(current_line)
           
           begin
