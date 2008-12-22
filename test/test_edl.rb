@@ -1,6 +1,7 @@
 require File.dirname(__FILE__) + '/../lib/edl'
 require File.dirname(__FILE__) + '/../lib/edl/cutter'
 require File.dirname(__FILE__) + '/../lib/edl/grabber'
+
 require 'rubygems'
 require 'test/unit'
 require 'flexmock'
@@ -61,10 +62,12 @@ class TestParser < Test::Unit::TestCase
     no_trans = @edl.without_transitions
     
     assert_equal 2, no_trans.events.length
-    assert_equal (Timecode.parse('01:00:00:00') + 43).to_s, no_trans.events[0].rec_end_tc.to_s, 
+    target_tc = (Timecode.parse('01:00:00:00') + 43)
+    assert_equal target_tc, no_trans.events[0].rec_end_tc, 
       "The incoming clip should have been extended by the length of the dissolve"
-      
-    assert_equal Timecode.parse('01:00:00:00').to_s, no_trans.events[1].rec_start_tc.to_s
+    
+    target_tc = Timecode.parse('01:00:00:00')
+    assert_equal target_tc, no_trans.events[1].rec_start_tc
       "The outgoing clip should have been left in place"
   end
   
@@ -131,12 +134,12 @@ class ReverseTimewarpTest < Test::Unit::TestCase
     assert clip.has_timewarp?, "Should respond true to has_timewarp?"
     tw = clip.timewarp
     
-    assert_equal -25, tw.actual_framerate.to_i
+    assert_equal( -25, tw.actual_framerate.to_i)
     assert tw.reverse?
     assert_equal clip.length, tw.actual_length_of_source
     assert_equal clip.src_start_tc, tw.actual_src_end_tc
     assert_equal clip.src_start_tc - 52, tw.actual_src_start_tc
-    assert_equal -100, clip.timewarp.speed_in_percent.to_i
+    assert_equal( -100, clip.timewarp.speed_in_percent.to_i)
     
   end
 end
@@ -281,12 +284,12 @@ class ComplexTest < Test::Unit::TestCase
   end
 end
 
-class GrabberTest < Test::Unit::TestCase
-  FILM = '/Users/julik/Downloads/HC_CORRECT-TCS_VIDEO1.edl.txt'
-  def test_cutter
-    complex = EDL::Parser.new.parse(File.open(FILM))
-    cutter = EDL::Grabber.new("/Users/julik/Desktop/Cutto/HC_CORRECT-TCS.mov")
-    cutter.ffmpeg_bin = '/opt/local/bin/ffmpeg'
-    cutter.grab(complex)
-  end
-end
+# class GrabberTest < Test::Unit::TestCase
+#   FILM = '/Users/julik/Downloads/HC_CORRECT-TCS_VIDEO1.edl.txt'
+#   def test_cutter
+#     complex = EDL::Parser.new.parse(File.open(FILM))
+#     cutter = EDL::Grabber.new("/Users/julik/Desktop/Cutto/HC_CORRECT-TCS.mov")
+#     cutter.ffmpeg_bin = '/opt/local/bin/ffmpeg'
+#     cutter.grab(complex)
+#   end
+# end
