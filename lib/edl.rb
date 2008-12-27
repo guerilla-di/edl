@@ -355,7 +355,6 @@ module EDL
       # Then the timecodes
       [:src_start_tc, :src_end_tc, :rec_start_tc, :rec_end_tc].each do | k |
         begin
-          # FIXME
           props[k] = EDL::Parser.timecode_from_line_elements(matches, @fps)
         rescue Timecode::Error => e 
           raise ApplyError, "Cannot parse timecode - #{e}", line
