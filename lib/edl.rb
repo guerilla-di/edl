@@ -398,6 +398,7 @@ module EDL
     
     def parse(io)
       stack, matchers = List.new, get_matchers
+      stack.fps = @fps
       until io.eof?
         current_line = io.gets.strip
         matchers.each do | matcher |

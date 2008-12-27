@@ -33,10 +33,10 @@ class Test::Unit::TestCase
 end
 
 class TestParser < Test::Unit::TestCase
+  
   def test_inst
     assert_nothing_raised { EDL::Parser.new }
   end
-  
   
   def test_inits_matchers_with_framerate
     p = EDL::Parser.new(30)
