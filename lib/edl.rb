@@ -397,7 +397,7 @@ module EDL
     end
     
     def parse(io)
-      stack, matchers = [], get_matchers
+      stack, matchers = List.new, get_matchers
       until io.eof?
         current_line = io.gets.strip
         matchers.each do | matcher |
@@ -410,8 +410,7 @@ module EDL
           end
         end
       end
-      
-      return List.new(stack)
+      stack
     end
     
     def self.timecode_from_line_elements(elements, fps)
