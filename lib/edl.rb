@@ -10,22 +10,21 @@ module EDL
   
   # Represents an EDL, is returned from the parser. Traditional operation is functional style, i.e.
   #  edl.renumbered.without_transitions.without_generators
-  class List
-    attr_accessor :events, :fps
+  class List < Array
+    attr_accessor :fps
     
-    def initialize(events = [])
-      @events = events.dup
+    def events
+      self
     end
     
     # Return the same EDL with all dissolves stripped and replaced by the clips under them
     def without_transitions
       # Find dissolves
       cpy = []
-      
-      @events.each_with_index do | e, i |
+      each_with_index do | e, i |
         # A dissolve always FOLLOWS the incoming clip
-        if @events[i+1] && @events[i+1].has_transition?
-          dissolve = @events[i+1]
+        if self[i+1] && self[i+1].has_transition?
+          dissolve = self[i+1]
           len = dissolve.transition.duration.to_i
           
           # The dissolve contains the OUTGOING clip, we are the INCOMING. Extend the
@@ -54,7 +53,7 @@ module EDL
     end
     
     def renumbered
-      renumed = @events.dup
+      renumed = self.dup
       pad = renumed.length.to_s.length
       pad = 3 if pad < 3
       
@@ -69,8 +68,7 @@ module EDL
     # (so this is best used in concert with the original EDL where record TC is pristine)
     def without_timewarps
       self.class.new(
-        @events.map do | e |
-          
+        map do | e |
           if e.has_timewarp?
             repl = e.copy_properties_to(e.class.new)
             from, to = e.timewarp.actual_src_start_tc, e.timewarp.actual_src_end_tc
@@ -86,7 +84,7 @@ module EDL
     # Return the same EDL without AX, BL and other GEN events (like slug, text and solids).
     # Usually used in concert with "without_transitions"
     def without_generators
-      self.class.new(@events.reject{|e| e.generator? })
+      self.class.new(self.reject{|e| e.generator? })
     end
     
     # Return the list of clips used by this EDL at full capture length
@@ -97,9 +95,9 @@ module EDL
     # Return the same EDL with the first event starting at 00:00:00:00 and all subsequent events
     # shifted accordingly
     def from_zero
-      shift_by = @events[0].rec_start_tc
+      shift_by = self[0].rec_start_tc
       self.class.new(
-        @events.map do | original |
+        map do | original |
           e = original.dup
           e.rec_start_tc =  (e.rec_start_tc - shift_by)
           e.rec_end_tc =  (e.rec_end_tc - shift_by)
@@ -111,7 +109,7 @@ module EDL
     # Return the same EDL with neighbouring clips joined at cuts where applicable (if a clip
     # is divided in two pieces it will be spliced). Most useful in combination with without_timewarps
     def spliced
-      spliced_edl = @events.inject([]) do | spliced, cur  |
+      spliced_edl = inject([]) do | spliced, cur  |
         latest = spliced[-1]
         # Append to latest if splicable
         if latest && (latest.reel == cur.reel) && (cur.src_start_tc == (latest.src_end_tc + 1))
