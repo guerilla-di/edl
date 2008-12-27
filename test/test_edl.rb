@@ -37,6 +37,14 @@ class TestParser < Test::Unit::TestCase
     assert_nothing_raised { EDL::Parser.new }
   end
   
+  
+  def test_inits_matchers_with_framerate
+    p = EDL::Parser.new(30)
+    matchers = p.get_matchers
+    event_matcher = matchers.find{|e| e.is_a?(EDL::EventMatcher) }
+    assert_equal 30, event_matcher.fps
+  end
+  
   def test_timecode_from_elements
     elems = ["08", "04", "24", "24"]
     assert_nothing_raised { @tc = EDL::Parser.timecode_from_line_elements(elems, 30) }
@@ -157,7 +165,7 @@ class EventMatcherTest < Test::Unit::TestCase
   ]
 
   def test_clip_generation_from_line
-    m = EDL::EventMatcher.new
+    m = EDL::EventMatcher.new(25)
     
     clip = m.apply([],
       '020  008C     V     C        08:04:24:24 08:04:25:19 01:00:25:22 01:00:26:17'
@@ -176,7 +184,7 @@ class EventMatcherTest < Test::Unit::TestCase
   end
   
   def test_dissolve_generation_from_line
-    m = EDL::EventMatcher.new
+    m = EDL::EventMatcher.new(25)
     dissolve = m.apply([],
       '025  GEN      V     D    025 00:00:55:10 00:00:58:11 01:00:29:19 01:00:32:20'
     )
@@ -193,7 +201,7 @@ class EventMatcherTest < Test::Unit::TestCase
   end
 
   def test_wipe_generation_from_line
-    m = EDL::EventMatcher.new
+    m = EDL::EventMatcher.new(25)
     wipe = m.apply([],
       '025  GEN      V     W001  025 00:00:55:10 00:00:58:11 01:00:29:19 01:00:32:20'
     )
@@ -213,7 +221,7 @@ class EventMatcherTest < Test::Unit::TestCase
   end
   
   def test_black_generation_from_line
-    m = EDL::EventMatcher.new
+    m = EDL::EventMatcher.new(25)
     black = m.apply([],
       '025        BL V     C        00:00:00:00 00:00:00:00 01:00:29:19 01:00:29:19' 
     )
@@ -232,7 +240,7 @@ class EventMatcherTest < Test::Unit::TestCase
   
   def test_matches_all_patterns
     EVT_PATTERNS.each do | pat |
-      assert EDL::EventMatcher.new.matches?(pat), "EventMatcher should match #{pat}"
+      assert EDL::EventMatcher.new(25).matches?(pat), "EventMatcher should match #{pat}"
     end
   end
 end

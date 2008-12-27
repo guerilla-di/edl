@@ -9,7 +9,6 @@ module EDL
   DEFAULT_FPS = 25
   
   # Represents an EDL, is returned from the parser. Traditional operation is functional style, i.e.
-  #
   #  edl.renumbered.without_transitions.without_generators
   class List
     attr_accessor :events, :fps
@@ -127,6 +126,7 @@ module EDL
     end
   end
   
+  # Represents an edit event
   class Event
     attr_accessor :num, 
       :reel, 
@@ -137,6 +137,7 @@ module EDL
       :rec_end_tc,
       :comments,
       :original_line
+    
     def to_s
       %w( num reel track src_start_tc src_end_tc rec_start_tc rec_end_tc).map{|a| self.send(a).to_s}.join("  ")
     end
@@ -274,7 +275,11 @@ module EDL
   end
   
   class TimewarpMatcher < Matcher
-    def initialize
+    
+    attr_reader :fps
+    
+    def initialize(fps)
+      @fps = fps
       @regexp = /M2(\s+)(\w+)(\s+)(\-?\d+\.\d+)(\s+)(\d{1,2}):(\d{1,2}):(\d{1,2}):(\d{1,2})/
     end
     
@@ -286,7 +291,7 @@ module EDL
       
       begin
         # FIXME
-        tw_start_source_tc = Parser.timecode_from_line_elements(matches, DEFAULT_FPS)
+        tw_start_source_tc = Parser.timecode_from_line_elements(matches, @fps)
       rescue Timecode::Error => e
         raise ApplyError, "Invalid TC in timewarp (#{e})", line
       end
@@ -311,8 +316,11 @@ module EDL
     # 021  009      V     C        00:39:04:21 00:39:05:09 01:00:26:17 01:00:27:05
     EVENT_PAT = /(\d+)(\s+)(\w+)(\s+)(\w+)(\s+)(\w+)(\s+)((\w+\s+)?)#{TC} #{TC} #{TC} #{TC}/
     
-    def initialize
+    attr_reader :fps
+    
+    def initialize(some_fps)
       super(EVENT_PAT)
+      @fps = some_fps
     end
     
     def apply(stack, line)
@@ -348,7 +356,7 @@ module EDL
       [:src_start_tc, :src_end_tc, :rec_start_tc, :rec_end_tc].each do | k |
         begin
           # FIXME
-          props[k] = EDL::Parser.timecode_from_line_elements(matches, DEFAULT_FPS)
+          props[k] = EDL::Parser.timecode_from_line_elements(matches, @fps)
         rescue Timecode::Error => e 
           raise ApplyError, "Cannot parse timecode - #{e}", line
         end
@@ -378,8 +386,17 @@ module EDL
   end
   
   class Parser
+    
+    attr_reader :fps
+    
+    # Initialize an EDL parser. Pass the FPS to it, as the usual EDL does not contain any kind of reference 
+    # to it's framerate
+    def initialize(with_fps = DEFAULT_FPS)
+      @fps = with_fps
+    end
+    
     def get_matchers
-      [ EventMatcher.new, EffectMatcher.new, NameMatcher.new, TimewarpMatcher.new ]
+      [ EventMatcher.new(@fps), EffectMatcher.new, NameMatcher.new, TimewarpMatcher.new(@fps) ]
     end
     
     def parse(io)

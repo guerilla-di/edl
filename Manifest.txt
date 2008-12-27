@@ -1,0 +1,14 @@
+lib/edl.rb
+lib/edl/cutter.rb
+lib/edl/grabber.rb
+test/samples/45S_SAMPLE.EDL
+test/samples/REVERSE.EDL
+test/samples/SIMPLE_DISSOLVE.EDL
+test/samples/SPLICEME.EDL
+test/samples/TIMEWARP.EDL
+test/samples/TIMEWARP_HALF.EDL
+test/samples/TRAILER_EDL.edl
+test/test_edl.rb
+Rakefile
+History.txt
+README.txt
