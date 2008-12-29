@@ -1,5 +1,5 @@
 require "rubygems"
-require "timecode"
+require "/Code/libs/timecode/lib/timecode"
 
 # A simplistic EDL parser. Current limitations: no support for DF timecode, no support for audio,
 # no support for split edits, no support for key effects, no support for audio
@@ -11,7 +11,6 @@ module EDL
   # Represents an EDL, is returned from the parser. Traditional operation is functional style, i.e.
   #  edl.renumbered.without_transitions.without_generators
   class List < Array
-    attr_accessor :fps
     
     def events
       self
@@ -153,12 +152,16 @@ module EDL
   end
   
   class Clip < Event
-    attr_accessor :clip_name, :timewarp
-    attr_accessor :transition
+    attr_accessor :clip_name, :timewarp, :transition, :ends_with_a_transition
     
     # Returns true if the clip starts with a transiton (not a jump cut)
     def has_transition?
       !transition.nil?
+    end
+    
+    # Returns true if the clip ends with a transition (if the next clip starts with a transition)
+    def ends_with_a_transition?
+      !!ends_with_a_transition
     end
     
     def has_timewarp?
@@ -375,6 +378,11 @@ module EDL
           nil
       end
       
+      # Give a hint on the incoming clip as well
+      if evt.transition
+        stack[-1].ends_with_a_transition = true if stack[-1]
+      end
+      
       props.each_pair { | k, v | evt.send("#{k}=", v) }
       
       stack << evt
@@ -398,7 +406,6 @@ module EDL
     
     def parse(io)
       stack, matchers = List.new, get_matchers
-      stack.fps = @fps
       until io.eof?
         current_line = io.gets.strip
         matchers.each do | matcher |

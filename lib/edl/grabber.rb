@@ -22,8 +22,7 @@ module EDL
     end
     
     def generate_grab(evt, at, to_file)
-#      cmd = "#{ffmpeg_bin} -i #{@source_path} -an -ss #{at} -vframes 1 -r #{at.fps} -y #{to_file}%d.jpg"
-      cmd = "#{ffmpeg_bin} -i #{@source_path} -an -ss #{at} -vframes 1 -y #{to_file}%d.jpg"
+      cmd = "#{ffmpeg_bin} -i #{@source_path} -an -ss #{at.with_frames_as_fraction} -vframes 1 -y #{to_file}%d.jpg"
       `#{cmd}`
     end
   end

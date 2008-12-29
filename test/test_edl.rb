@@ -199,6 +199,15 @@ class EventMatcherTest < Test::Unit::TestCase
     assert_kind_of EDL::Dissolve, dissolve.transition
     assert_equal '025', dissolve.transition.duration
   end
+  
+  def test_dissolve_generation_sets_flag_on_previous_evt
+    m = EDL::EventMatcher.new(25)
+    previous_evt = flexmock
+    previous_evt.should_receive(:ends_with_a_transition=).with(true).once
+    dissolve = m.apply([previous_evt],
+      '025  GEN      V     D    025 00:00:55:10 00:00:58:11 01:00:29:19 01:00:32:20'
+    )
+  end
 
   def test_wipe_generation_from_line
     m = EDL::EventMatcher.new(25)
@@ -292,12 +301,12 @@ class ComplexTest < Test::Unit::TestCase
   end
 end
 
-# class GrabberTest < Test::Unit::TestCase
-#   FILM = '/Users/julik/Downloads/HC_CORRECT-TCS_VIDEO1.edl.txt'
-#   def test_cutter
-#     complex = EDL::Parser.new.parse(File.open(FILM))
-#     cutter = EDL::Grabber.new("/Users/julik/Desktop/Cutto/HC_CORRECT-TCS.mov")
-#     cutter.ffmpeg_bin = '/opt/local/bin/ffmpeg'
-#     cutter.grab(complex)
-#   end
-# end
+class GrabberTest < Test::Unit::TestCase
+  FILM = '/Users/julik/Downloads/HC_CORRECT-TCS_VIDEO1.edl.txt'
+ #def test_cutter
+ #  complex = EDL::Parser.new.parse(File.open(FILM))
+ #  cutter = EDL::Grabber.new("/Users/julik/Desktop/Cutto/HC_CORRECT-TCS.mov")
+ #  cutter.ffmpeg_bin = '/opt/local/bin/ffmpeg'
+ #  cutter.grab(complex)
+ #end
+end
