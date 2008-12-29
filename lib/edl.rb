@@ -1,5 +1,5 @@
 require "rubygems"
-require "/Code/libs/timecode/lib/timecode"
+require "timecode"
 
 # A simplistic EDL parser. Current limitations: no support for DF timecode, no support for audio,
 # no support for split edits, no support for key effects, no support for audio
