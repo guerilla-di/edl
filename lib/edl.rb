@@ -343,7 +343,7 @@ module EDL
       end
       
       evt_with_tw = stack.reverse.find{|e| e.src_start_tc == tw_start_source_tc && e.reel == from_reel }
-
+      
       unless evt_with_tw
         raise ApplyError, "Cannot find event marked by timewarp", line
       else

@@ -22,7 +22,7 @@ module EDL
       end
     end
   
-    def actual_src_start_tc
+    def actual_src_start_tc      
       unless reverse?
         clip.src_start_tc
       else

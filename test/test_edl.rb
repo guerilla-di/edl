@@ -26,14 +26,6 @@ class TestEvent < Test::Unit::TestCase
   end
 end
 
-class Test::Unit::TestCase
-  def parse_evt(matcher_klass, line)
-    stack = []
-    matcher_klass.new.apply(stack, line)
-    stack.pop
-  end
-end
-
 class TestParser < Test::Unit::TestCase
   
   def test_inst
@@ -144,6 +136,7 @@ class TimewarpMatcherTest < Test::Unit::TestCase
 end
 
 class ReverseTimewarpTest < Test::Unit::TestCase
+  
   def test_parse
     @edl = EDL::Parser.new.parse(File.open(REVERSE))
     assert_equal 1, @edl.length
@@ -386,10 +379,9 @@ class SpeedupAndFadeTest < Test::Unit::TestCase
     assert_equal 689, first_evt.rec_length
     assert_equal 689 + 25, first_evt.rec_length_with_transition
     
-    
     assert_equal "01:00:00:00", first_evt.capture_from_tc.to_s,
       "Should start with the lesser timecode"
-    assert_equal "01:00:40:00", first_evt.capture_to_tc.to_s,
+    assert_equal "01:00:39:23", first_evt.capture_to_tc.to_s,
       "Will need to capture 40 seconds even though the event is smaller"
   end
   
