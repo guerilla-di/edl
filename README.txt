@@ -3,7 +3,7 @@
 == DESCRIPTION:
 
 Work with EDL files from Ruby
-
+http://en.wikipedia.org/wiki/Edit_decision_list 
 
 == SYNOPSIS:
 

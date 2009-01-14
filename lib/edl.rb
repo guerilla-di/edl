@@ -507,7 +507,7 @@ module EDL
       [ EventMatcher.new(@fps), EffectMatcher.new, NameMatcher.new, TimewarpMatcher.new(@fps), CommentMatcher.new ]
     end
     
-    # Parse a passed File or IO object line by line
+    # Parse a passed File or IO object line by line, or the whole string
     def parse(io)
       return parse(StringIO.new(io.to_s)) unless io.respond_to?(:eof?)
       
@@ -525,11 +525,6 @@ module EDL
         end
       end
       stack
-    end
-    
-    # Parse a passed string as an EDL
-    def parse_string(str)
-      parse(StringIO.new(str))
     end
     
     # Init a Timecode object from the passed elements with the passed framerate
