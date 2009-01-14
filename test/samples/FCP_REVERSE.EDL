@@ -1,0 +1,9 @@
+TITLE: REVSIMPLE
+FCM: NON-DROP FRAME
+
+001  FOO      V     C        01:00:39:23 01:01:19:23 01:00:00:00 01:00:40:00  
+* FROM CLIP NAME:  BARS_40S.MOV
+* COMMENT: 
+M2   FOO           -025.0                01:00:39:23
+
+

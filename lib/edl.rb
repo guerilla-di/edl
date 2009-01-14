@@ -62,9 +62,7 @@ module EDL
       pad = 3 if pad < 3
       
       (0...renumed.length).map{|e| renumed[e].num = "%0#{pad}d" % (e+1) }
-      x = self.class.new(renumed)
-      puts x.inspect
-      x
+      self.class.new(renumed)
     end
         
     # Return the same EDL with all timewarps expanded to native length. Clip length
@@ -182,7 +180,6 @@ module EDL
       to_s
     end
     
-    
     def comments #:nodoc:
       @comments ||= []
       @comments
@@ -224,37 +221,29 @@ module EDL
     
     # Get the record length of the event (how long it occupies in the EDL without an eventual outgoing transition)
     def rec_length
-      (rec_end_tc - rec_start_tc).to_i
+      (rec_end_tc.to_i - rec_start_tc.to_i).to_i
     end
 
     # Get the record length of the event (how long it occupies in the EDL without an eventual outgoing transition)
     def rec_length_with_transition
-      (rec_end_tc - rec_start_tc).to_i + outgoing_transition_duration.to_i
+      rec_length + outgoing_transition_duration.to_i
     end
     
     # How long does the capture need to be to complete this event including timewarps and transitions
     def src_length
-      vanilla_length = rec_length
-      # Expand transition
-      vanilla_length += @outgoing_transition_duration if ends_with_a_transition?
-      # Expand timewarp
-      if timewarp
-        (vanilla_length / 100.0 * (timewarp.speed_in_percent).abs).ceil
-      else
-        vanilla_length
-      end
+      @timewarp ? @timewarp.actual_length_of_source : rec_length_with_transition
     end
     
     alias_method :capture_length, :src_length
 
     # Capture from (and including!) this timecode to complete this event including timewarps and transitions
     def capture_from_tc
-      timewarp ? timewarp.actual_src_start_tc : src_start_tc
+      timewarp ? timewarp.source_used_from : src_start_tc
     end
     
     # Capture up to (but not including!) this timecode to complete this event including timewarps and transitions
     def capture_to_tc
-      src_start_tc + src_length
+      timewarp ? timewarp.source_used_upto : (src_start_tc + rec_length_with_transition)
     end
     
     # Returns true if this event is a generator

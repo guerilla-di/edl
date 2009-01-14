@@ -1,44 +1,43 @@
 module EDL
   # Represents a timewarp. Will be placed in EDL::Event#timewarp
+  # For a reversed clip, the source start we get from the EDL in the src start
+  # is the LAST used frame. For a pos rate clip, the source start is the bona fide source start. Nice eh? 
   class Timewarp
   
     # What is the actual framerate of the clip (float)
     attr_accessor :actual_framerate
-
     attr_accessor :clip #:nodoc:
-  
-    # Get the speed in percent (reverse will report -100)
-    def speed_in_percent
-      (actual_framerate.to_f / clip.src_start_tc.fps) * 100
-    end
-  
-    # Get the actual end of source that is needed for the timewarp to be computed properly,
-    # round up to not generate stills at ends of clips
-    def actual_src_end_tc
-      unless reverse?
-        clip.src_start_tc + actual_length_of_source
-      else
-        clip.src_start_tc
-      end
-    end
-  
-    def actual_src_start_tc      
-      unless reverse?
-        clip.src_start_tc
-      else
-        clip.src_start_tc - actual_length_of_source
-      end
-    end
-  
-    # Returns the true number of frames that is needed to complete the timewarp edit
-    def actual_length_of_source
-      length_in_edit = (clip.src_end_tc - clip.src_start_tc).to_i
-      ((length_in_edit / 25.0) * actual_framerate).ceil.abs
-    end
-  
-    # Is the clip reversed?
+    
+    # Does this timewarp reverse the clip?
     def reverse?
-      actual_framerate < 0
+      @actual_framerate < 0
+    end
+    
+    # Get the speed in percent
+    def speed_in_percent
+      (@clip.rec_start_tc.fps / @actual_framerate) * 100
+    end
+    alias_method :speed, :speed_in_percent
+    
+    # Compute the length of the clip we need to capture. The length is computed in frames and
+    # is always rounded up (better one frame more than one frame less!)
+    def actual_length_of_source
+      # First, get the length of the clip including a transition. This is what we are scaled to.
+      target_len = @clip.rec_length_with_transition.to_f
+      factor = @actual_framerate / @clip.rec_start_tc.fps
+      (target_len * factor).ceil.abs
+    end
+    
+    # What is the starting frame for the captured clip? If we are a reverse, then the src start of the
+    # clip is our LAST frame, otherwise it's the first
+    def source_used_from
+      # TODO: account for the 2 frame deficiency which is suspicious
+      reverse? ? ((@clip.src_start_tc + 2) - actual_length_of_source) : @clip.src_start_tc
+    end
+    
+    # Where to end the capture? This is also dependent on whether we are a reverse or not
+    def source_used_upto
+      source_used_from + actual_length_of_source
     end
   end
 end

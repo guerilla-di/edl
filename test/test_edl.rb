@@ -13,9 +13,10 @@ SPLICEME                    = File.dirname(__FILE__) + '/samples/SPLICEME.EDL'
 SIMPLE_TIMEWARP             = File.dirname(__FILE__) + '/samples/TIMEWARP.EDL'
 SLOMO_TIMEWARP              = File.dirname(__FILE__) + '/samples/TIMEWARP_HALF.EDL'
 FORTY_FIVER                 = File.dirname(__FILE__) + '/samples/45S_SAMPLE.EDL'
-REVERSE                     = File.dirname(__FILE__) + '/samples/REVERSE.EDL'
+AVID_REVERSE                = File.dirname(__FILE__) + '/samples/REVERSE.EDL'
 SPEEDUP_AND_FADEOUT         = File.dirname(__FILE__) + '/samples/SPEEDUP_AND_FADEOUT.EDL'
 SPEEDUP_REVERSE_AND_FADEOUT = File.dirname(__FILE__) + '/samples/SPEEDUP_REVERSE_AND_FADEOUT.EDL'
+FCP_REVERSE                 = File.dirname(__FILE__) + '/samples/FCP_REVERSE.EDL'
 
 class TestEvent < Test::Unit::TestCase
   def test_attributes_defined
@@ -108,12 +109,12 @@ class TimewarpMatcherTest < Test::Unit::TestCase
     assert_not_nil clip.timewarp
     assert_kind_of EDL::Timewarp, clip.timewarp
 
-    assert clip.timewarp.actual_src_end_tc > clip.src_end_tc
-    assert_equal "03:03:24:18", clip.timewarp.actual_src_end_tc.to_s
+    assert clip.timewarp.source_used_upto > clip.src_end_tc
+
+    assert_equal "03:03:24:18", clip.timewarp.source_used_from.to_s
     assert_equal 124, clip.timewarp.actual_length_of_source
     assert !clip.timewarp.reverse?
     assert !clip.reverse?
-    
   end
   
   def test_timwarp_slomo
@@ -123,8 +124,9 @@ class TimewarpMatcherTest < Test::Unit::TestCase
     assert_not_nil clip.timewarp
     assert_kind_of EDL::Timewarp, clip.timewarp
 
-    assert clip.timewarp.actual_src_end_tc < clip.src_end_tc
-    assert_equal "03:03:19:24", clip.timewarp.actual_src_end_tc.to_s
+    assert clip.timewarp.source_used_upto < clip.src_end_tc
+
+    assert_equal "03:03:19:24", clip.timewarp.source_used_upto.to_s
     assert_equal 10, clip.rec_length
     assert_equal 5, clip.src_length
     assert_equal 5, clip.timewarp.actual_length_of_source
@@ -135,27 +137,44 @@ class TimewarpMatcherTest < Test::Unit::TestCase
 
 end
 
-class ReverseTimewarpTest < Test::Unit::TestCase
+class AvidReverseTimewarpTest < Test::Unit::TestCase
   
   def test_parse
-    @edl = EDL::Parser.new.parse(File.open(REVERSE))
-    assert_equal 1, @edl.length
+    clip = EDL::Parser.new.parse(File.open(AVID_REVERSE)).pop
     
-    clip = @edl[0]
-    assert_equal 52, clip.rec_length
+    assert_equal 52, clip.rec_length, "Record length should be computed properly"
     
     assert clip.has_timewarp?, "Should respond true to has_timewarp?"
     tw = clip.timewarp
     
     assert_equal( -25, tw.actual_framerate.to_i)
+    
     assert tw.reverse?
     assert clip.reverse?
     assert clip.reversed?
-    assert_equal 52, clip.src_length
-    assert_equal clip.src_start_tc, tw.actual_src_end_tc
-    assert_equal clip.src_start_tc - 52, tw.actual_src_start_tc
-    assert_equal( -100, clip.timewarp.speed_in_percent.to_i)
     
+    assert_equal 52, clip.src_length, "The src length should be computed the same as its just a reverse"
+    assert_equal -100.0, clip.timewarp.speed
+  end
+end
+
+class FinalCutProReverseTest < Test::Unit::TestCase
+  def test_parses_properly
+    list = EDL::Parser.new.parse(File.open(FCP_REVERSE))
+    assert_equal 1, list.length
+    first_evt = list[0]
+    
+    assert_equal 1000, first_evt.rec_length
+    assert_equal "01:00:00:00", first_evt.rec_start_tc.to_s
+    assert_equal "01:00:40:00", first_evt.rec_end_tc.to_s
+
+    assert first_evt.reverse?
+    assert_not_nil first_evt.timewarp
+    assert_equal 1000, first_evt.src_length
+    
+    assert_equal "01:00:00:00", first_evt.timewarp.source_used_from.to_s
+    assert_equal "01:00:40:00", first_evt.timewarp.source_used_upto.to_s
+
   end
 end
 
@@ -362,12 +381,19 @@ class SpeedupAndFadeTest < Test::Unit::TestCase
     
     assert_equal 2, list.length
     first_evt = list[0]
-
-    assert_equal "01:00:00:00", first_evt.capture_from_tc.to_s,
-      "Will need to capture 40 seconds even though the event is smaller"
     
-    assert_equal "01:00:40:00", first_evt.capture_to_tc.to_s,
-      "Will need to capture 40 seconds even though the event is smaller"
+    assert first_evt.has_timewarp?
+    assert_not_nil first_evt.timewarp
+
+    assert_equal 689,  first_evt.rec_length
+    assert_equal 714,  first_evt.rec_length_with_transition
+    assert_equal 1000, first_evt.timewarp.actual_length_of_source
+    assert_equal 1000, first_evt.src_length
+    
+    assert_equal "01:00:00:00", first_evt.capture_from_tc.to_s,
+      "Will need to capture 40 seconds minus 1 frame that FCP simply forgets"
+
+    assert_equal "01:00:40:00", first_evt.capture_to_tc.to_s
   end
 
   def test_proper_timings_with_reverse_speedup
@@ -377,12 +403,13 @@ class SpeedupAndFadeTest < Test::Unit::TestCase
     first_evt = list[0]
     assert first_evt.reverse?
     assert_equal 689, first_evt.rec_length
-    assert_equal 689 + 25, first_evt.rec_length_with_transition
+    assert_equal 714, first_evt.rec_length_with_transition
     
     assert_equal "01:00:00:00", first_evt.capture_from_tc.to_s,
       "Should start with the lesser timecode"
-    assert_equal "01:00:39:23", first_evt.capture_to_tc.to_s,
-      "Will need to capture 40 seconds even though the event is smaller"
+    
+    assert_equal "01:00:40:00", first_evt.capture_to_tc.to_s,
+      "Will need to capture 40 seconds minus 1 frame that FCP simply forgets"
   end
   
 end
