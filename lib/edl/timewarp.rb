@@ -15,7 +15,7 @@ module EDL
     
     # Get the speed in percent
     def speed_in_percent
-      (@clip.rec_start_tc.fps / @actual_framerate) * 100
+      (@actual_framerate / @clip.rec_start_tc.fps) * 100
     end
     alias_method :speed, :speed_in_percent
     
@@ -24,6 +24,7 @@ module EDL
     def actual_length_of_source
       # First, get the length of the clip including a transition. This is what we are scaled to.
       target_len = @clip.rec_length_with_transition.to_f
+      # Determine the framerate scaling factor, this is the speed
       factor = @actual_framerate / @clip.rec_start_tc.fps
       (target_len * factor).ceil.abs
     end

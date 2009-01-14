@@ -1,3 +1,4 @@
+.DS_Store
 History.txt
 Manifest.txt
 README.txt
@@ -11,6 +12,7 @@ lib/edl/timewarp.rb
 lib/edl/transition.rb
 test/.DS_Store
 test/samples/45S_SAMPLE.EDL
+test/samples/FCP_REVERSE.EDL
 test/samples/REVERSE.EDL
 test/samples/SIMPLE_DISSOLVE.EDL
 test/samples/SPEEDUP_AND_FADEOUT.EDL

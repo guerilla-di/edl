@@ -18,6 +18,10 @@ SPEEDUP_AND_FADEOUT         = File.dirname(__FILE__) + '/samples/SPEEDUP_AND_FAD
 SPEEDUP_REVERSE_AND_FADEOUT = File.dirname(__FILE__) + '/samples/SPEEDUP_REVERSE_AND_FADEOUT.EDL'
 FCP_REVERSE                 = File.dirname(__FILE__) + '/samples/FCP_REVERSE.EDL'
 
+def tc(tc)
+  Timecode.parse(tc)
+end
+
 class TestEvent < Test::Unit::TestCase
   def test_attributes_defined
     evt = EDL::Event.new
@@ -111,8 +115,11 @@ class TimewarpMatcherTest < Test::Unit::TestCase
 
     assert clip.timewarp.source_used_upto > clip.src_end_tc
 
-    assert_equal "03:03:24:18", clip.timewarp.source_used_from.to_s
+    assert_equal clip.src_start_tc, clip.timewarp.source_used_from,
+      "The timewarp capture start should be the same as the source tc"
+      
     assert_equal 124, clip.timewarp.actual_length_of_source
+    
     assert !clip.timewarp.reverse?
     assert !clip.reverse?
   end
@@ -388,6 +395,9 @@ class SpeedupAndFadeTest < Test::Unit::TestCase
     assert_equal 689,  first_evt.rec_length
     assert_equal 714,  first_evt.rec_length_with_transition
     assert_equal 1000, first_evt.timewarp.actual_length_of_source
+    
+    assert_equal 140,  first_evt.timewarp.speed
+    
     assert_equal 1000, first_evt.src_length
     
     assert_equal "01:00:00:00", first_evt.capture_from_tc.to_s,
@@ -405,7 +415,7 @@ class SpeedupAndFadeTest < Test::Unit::TestCase
     assert_equal 689, first_evt.rec_length
     assert_equal 714, first_evt.rec_length_with_transition
     
-    assert_equal "01:00:00:00", first_evt.capture_from_tc.to_s,
+    assert_equal tc("01:00:00:00"), first_evt.capture_from_tc,
       "Should start with the lesser timecode"
     
     assert_equal "01:00:40:00", first_evt.capture_to_tc.to_s,
