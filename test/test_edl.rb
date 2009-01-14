@@ -188,7 +188,6 @@ class EventMatcherTest < Test::Unit::TestCase
     
     assert_equal evt_len, clip.capture_len
     
-    assert_equal '020  008C     V     C        08:04:24:24 08:04:25:19 01:00:25:22 01:00:26:17', clip.original_line
   end
   
   def test_dissolve_generation_from_line
@@ -253,7 +252,6 @@ class EventMatcherTest < Test::Unit::TestCase
     assert_equal '025', black.num
     assert_equal 'BL', black.reel
     assert_equal 'V', black.track
-    assert_equal '025        BL V     C        00:00:00:00 00:00:00:00 01:00:29:19 01:00:29:19', black.original_line
   end
   
   def test_matches_all_patterns

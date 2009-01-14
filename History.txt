@@ -1,5 +1,6 @@
 === 0.0.2 / 2008-12-22
 
+* Do not store original EDL lines anymore
 * Deprecate EDL::Clip - everything is an EDL::Event now
 * Parse and save verbatim comments in EDL::Event#comments
   

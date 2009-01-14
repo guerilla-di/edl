@@ -132,7 +132,6 @@ module EDL
       :rec_start_tc, 
       :rec_end_tc,
       :comments,
-      :original_line,
     
       :clip_name,
       :timewarp,
@@ -212,6 +211,7 @@ module EDL
       (capture_to_tc - capture_from_tc)
     end
     
+    # Returns true if this event is a generator
     def generator?
       black? || (%(AX GEN).include?(reel))
     end
@@ -376,7 +376,7 @@ module EDL
     def apply(stack, line)
       
       matches = line.scan(@regexp).shift
-      props = {:original_line => line}
+      props = {}
       
       # FIrst one is the event number
       props[:num] = matches.shift
