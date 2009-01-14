@@ -1,5 +1,6 @@
 require "rubygems"
 require "timecode"
+require 'stringio'
 
 # A simplistic EDL parser. Current limitations: no support for DF timecode, no support for audio,
 # no support for split edits, no support for key effects, no support for audio
@@ -439,6 +440,7 @@ module EDL
     end
   end
   
+  # Is used to parse an EDL
   class Parser
     
     attr_reader :fps
@@ -449,11 +451,14 @@ module EDL
       @fps = with_fps
     end
     
-    def get_matchers
+    def get_matchers #:nodoc:
       [ EventMatcher.new(@fps), EffectMatcher.new, NameMatcher.new, TimewarpMatcher.new(@fps), CommentMatcher.new ]
     end
     
+    # Parse a passed File or IO object line by line
     def parse(io)
+      return parse(StringIO.new(io.to_s)) unless io.respond_to?(:eof?)
+      
       stack, matchers = List.new, get_matchers
       until io.eof?
         current_line = io.gets.strip
@@ -470,8 +475,14 @@ module EDL
       stack
     end
     
+    # Parse a passed string as an EDL
+    def parse_string(str)
+      parse(StringIO.new(str))
+    end
+    
+    # Init a Timecode object from the passed elements with the passed framerate
     def self.timecode_from_line_elements(elements, fps)
-      args = (0..3).map{|_| elements.shift.to_i} + [fps]
+      args = (0..3).map{|_| elements.shift.to_i} + [fps.to_f]
       Timecode.at(*args)
     end
   end

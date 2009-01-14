@@ -54,6 +54,13 @@ class TestParser < Test::Unit::TestCase
     assert elems.empty?, "The elements used for timecode should have been removed from the array"
   end
   
+  def test_parse_from_string
+    p = EDL::Parser.new
+    assert_nothing_raised{ @edl = p.parse File.read(SIMPLE_DISSOLVE) }
+    assert_kind_of EDL::List, @edl
+    assert_equal 2, @edl.events.length
+  end
+    
   def test_dissolve
     p = EDL::Parser.new
     assert_nothing_raised{ @edl = p.parse File.open(SIMPLE_DISSOLVE) }
