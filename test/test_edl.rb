@@ -61,10 +61,10 @@ class TestParser < Test::Unit::TestCase
     assert_equal 2, @edl.events.length
     
     first = @edl.events[0]
-    assert_kind_of EDL::Clip, first
+    assert_kind_of EDL::Event, first
     
     second = @edl.events[1]
-    assert_kind_of EDL::Clip, second
+    assert_kind_of EDL::Event, second
     assert second.has_transition?
     
     no_trans = @edl.without_transitions
@@ -173,7 +173,7 @@ class EventMatcherTest < Test::Unit::TestCase
     )
     
     assert_not_nil clip
-    assert_kind_of EDL::Clip, clip
+    assert_kind_of EDL::Event, clip
     assert_equal '020', clip.num
     assert_equal '008C', clip.reel
     assert_equal 'V', clip.track
@@ -197,7 +197,7 @@ class EventMatcherTest < Test::Unit::TestCase
       '025  GEN      V     D    025 00:00:55:10 00:00:58:11 01:00:29:19 01:00:32:20'
     )
     assert_not_nil dissolve
-    assert_kind_of EDL::Clip, dissolve
+    assert_kind_of EDL::Event, dissolve
     assert_equal '025', dissolve.num
     assert_equal 'GEN', dissolve.reel
     assert_equal 'V', dissolve.track
@@ -224,7 +224,7 @@ class EventMatcherTest < Test::Unit::TestCase
       '025  GEN      V     W001  025 00:00:55:10 00:00:58:11 01:00:29:19 01:00:32:20'
     )
     assert_not_nil wipe
-    assert_kind_of EDL::Clip, wipe
+    assert_kind_of EDL::Event, wipe
     assert wipe.generator?
     assert_equal '025', wipe.num
     assert_equal 'GEN', wipe.reel

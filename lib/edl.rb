@@ -4,8 +4,7 @@ require "timecode"
 # A simplistic EDL parser. Current limitations: no support for DF timecode, no support for audio,
 # no support for split edits, no support for key effects, no support for audio
 module EDL
-  VERSION = "0.0.1"
-  
+  VERSION = "0.0.2"
   DEFAULT_FPS = 25
   
   # Represents an EDL, is returned from the parser. Traditional operation is functional style, i.e.
@@ -32,7 +31,7 @@ module EDL
           incoming.src_end_tc += len
           incoming.rec_end_tc += len
           
-          outgoing = dissolve.copy_properties_to(Clip.new)
+          outgoing = dissolve.copy_properties_to(Event.new)
           
           # Add the A suffix to the ex-dissolve
           outgoing.num += 'A'
@@ -133,7 +132,13 @@ module EDL
       :rec_start_tc, 
       :rec_end_tc,
       :comments,
-      :original_line
+      :original_line,
+    
+      :clip_name,
+      :timewarp,
+      :transition,
+      :ends_with_a_transition,
+      :outgoing_transition_duration
     
     def to_s
       %w( num reel track src_start_tc src_end_tc rec_start_tc rec_end_tc).map{|a| self.send(a).to_s}.join("  ")
@@ -154,10 +159,6 @@ module EDL
       end
       evt
     end
-  end
-  
-  class Clip < Event
-    attr_accessor :clip_name, :timewarp, :transition, :ends_with_a_transition, :outgoing_transition_duration
     
     # Returns true if the clip starts with a transiton (not a jump cut)
     def has_transition?
@@ -215,7 +216,7 @@ module EDL
       black? || (%(AX GEN).include?(reel))
     end
   end
-  
+    
   # Represents a transition. We currently only support dissolves and SMPTE wipes
   # Will be avilable as EDL::Clip#transition
   class Transition
@@ -410,7 +411,7 @@ module EDL
         end
       end
       
-      evt = Clip.new
+      evt = Event.new
       transition_idx = props.delete(:transition)
       evt.transition = case transition_idx
         when 'D'

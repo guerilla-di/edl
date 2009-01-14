@@ -1,3 +1,8 @@
+=== 0.0.2 / 2008-12-22
+
+* Deprecate EDL::Clip - everything is an EDL::Event now
+* Parse and save verbatim comments in EDL::Event#comments
+  
 === 0.0.1 / 2008-12-22
 
 * 1 major enhancement
