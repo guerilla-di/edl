@@ -82,7 +82,7 @@ class TestParser < Test::Unit::TestCase
   def test_spliced
     p = EDL::Parser.new
     assert_nothing_raised{ @edl = p.parse(File.open(SPLICEME)) }
-    assert_equal 3, @edl.events.length
+    assert_equal 2, @edl.events.length
     
     spliced = @edl.spliced
     assert_equal 1, spliced.events.length, "Should have been spliced to one event"
@@ -123,7 +123,8 @@ class TimewarpMatcherTest < Test::Unit::TestCase
 
     assert clip.timewarp.actual_src_end_tc < clip.src_end_tc
     assert_equal "03:03:19:24", clip.timewarp.actual_src_end_tc.to_s
-    assert_equal 10, clip.length
+    assert_equal 10, clip.rec_length
+    assert_equal 5, clip.src_length
     assert_equal 5, clip.timewarp.actual_length_of_source
     assert_equal 50, clip.timewarp.speed_in_percent.to_i
     assert !clip.timewarp.reverse?
@@ -137,14 +138,14 @@ class ReverseTimewarpTest < Test::Unit::TestCase
     assert_equal 1, @edl.events.length
     
     clip = @edl.events[0]
-    assert_equal 52, clip.length
+    assert_equal 52, clip.rec_length
     
     assert clip.has_timewarp?, "Should respond true to has_timewarp?"
     tw = clip.timewarp
     
     assert_equal( -25, tw.actual_framerate.to_i)
     assert tw.reverse?
-    assert_equal clip.length, tw.actual_length_of_source
+    assert_equal 52, clip.src_length
     assert_equal clip.src_start_tc, tw.actual_src_end_tc
     assert_equal clip.src_start_tc - 52, tw.actual_src_start_tc
     assert_equal( -100, clip.timewarp.speed_in_percent.to_i)
@@ -180,6 +181,13 @@ class EventMatcherTest < Test::Unit::TestCase
     assert_equal '08:04:25:19', clip.src_end_tc.to_s
     assert_equal '01:00:25:22', clip.rec_start_tc.to_s
     assert_equal '01:00:26:17', clip.rec_end_tc.to_s
+    
+    evt_len = Timecode.parse('01:00:26:17') - Timecode.parse('01:00:25:22')
+    assert_equal evt_len, clip.rec_length
+    assert_equal evt_len, clip.src_length
+    
+    assert_equal evt_len, clip.capture_len
+    
     assert_equal '020  008C     V     C        08:04:24:24 08:04:25:19 01:00:25:22 01:00:26:17', clip.original_line
   end
   
@@ -197,13 +205,14 @@ class EventMatcherTest < Test::Unit::TestCase
     assert dissolve.has_transition?
     assert_not_nil dissolve.transition
     assert_kind_of EDL::Dissolve, dissolve.transition
-    assert_equal '025', dissolve.transition.duration
+    assert_equal 25, dissolve.transition.duration
   end
   
   def test_dissolve_generation_sets_flag_on_previous_evt
     m = EDL::EventMatcher.new(25)
     previous_evt = flexmock
     previous_evt.should_receive(:ends_with_a_transition=).with(true).once
+    previous_evt.should_receive(:outgoing_transition_duration=).with(25).once
     dissolve = m.apply([previous_evt],
       '025  GEN      V     D    025 00:00:55:10 00:00:58:11 01:00:29:19 01:00:32:20'
     )
@@ -254,6 +263,25 @@ class EventMatcherTest < Test::Unit::TestCase
   end
 end
 
+class CommentMatcherTest  < Test::Unit::TestCase
+  def test_matches
+    line = "* COMMENT: PURE BULLSHIT"
+    assert EDL::CommentMatcher.new.matches?(line)
+  end
+
+  def test_apply
+    line = "* COMMENT: PURE BULLSHIT"
+
+    comments = []
+    mok_evt = flexmock
+
+    2.times { mok_evt.should_receive(:comments).and_return(comments) }
+    2.times { EDL::CommentMatcher.new.apply([mok_evt], line) }
+
+    assert_equal ["COMMENT: PURE BULLSHIT", "COMMENT: PURE BULLSHIT"], mok_evt.comments 
+  end
+end
+
 class ClipNameMatcherTest < Test::Unit::TestCase
   def test_matches
     line = "* FROM CLIP NAME:  TAPE_6-10.MOV"
@@ -262,9 +290,14 @@ class ClipNameMatcherTest < Test::Unit::TestCase
   
   def test_apply
     line = "* FROM CLIP NAME:  TAPE_6-10.MOV"
+
     mok_evt = flexmock
+    comments = []
     mok_evt.should_receive(:clip_name=).with('TAPE_6-10.MOV').once
+    mok_evt.should_receive(:comments).and_return(comments).once
+    
     EDL::NameMatcher.new.apply([mok_evt], line)
+    assert_equal ["FROM CLIP NAME:  TAPE_6-10.MOV"], comments 
   end
 end
 
@@ -277,11 +310,16 @@ class EffectMatcherTest < Test::Unit::TestCase
   def test_apply
     line = "* EFFECT NAME: CROSS DISSOLVE"
     mok_evt, mok_transition = flexmock, flexmock
+    cmt = []
     
     mok_evt.should_receive(:transition).once.and_return(mok_transition)
+    mok_evt.should_receive(:comments).once.and_return(cmt)
+
     mok_transition.should_receive(:effect=).with("CROSS DISSOLVE").once
     
     EDL::EffectMatcher.new.apply([mok_evt], line)
+    
+    assert_equal ["EFFECT NAME: CROSS DISSOLVE"], cmt
   end
 end
 
@@ -299,14 +337,4 @@ class ComplexTest < Test::Unit::TestCase
     assert_equal '00:00:42:16', from_zero.events[-1].rec_end_tc.to_s,
       "The ending timecode of the last event should have been shifted 10 hours back"
   end
-end
-
-class GrabberTest < Test::Unit::TestCase
-  FILM = '/Users/julik/Downloads/HC_CORRECT-TCS_VIDEO1.edl.txt'
- #def test_cutter
- #  complex = EDL::Parser.new.parse(File.open(FILM))
- #  cutter = EDL::Grabber.new("/Users/julik/Desktop/Cutto/HC_CORRECT-TCS.mov")
- #  cutter.ffmpeg_bin = '/opt/local/bin/ffmpeg'
- #  cutter.grab(complex)
- #end
 end

@@ -22,7 +22,7 @@ module EDL
       cpy = []
       each_with_index do | e, i |
         # A dissolve always FOLLOWS the incoming clip
-        if self[i+1] && self[i+1].has_transition?
+        if e.ends_with_a_transition?
           dissolve = self[i+1]
           len = dissolve.transition.duration.to_i
           
@@ -41,7 +41,7 @@ module EDL
           cpy << incoming
           cpy << outgoing
         elsif e.has_transition?
-          # Skip, already handled!
+          # Skip, already handled on the previous clip
         else
           cpy << e.dup
         end
@@ -143,6 +143,11 @@ module EDL
       to_s
     end
     
+    def comments
+      @comments ||= []
+      @comments
+    end
+    
     def copy_properties_to(evt)
       %w( num reel track src_start_tc src_end_tc rec_start_tc rec_end_tc).each do | k |
         evt.send("#{k}=", send(k)) if evt.respond_to?(k)
@@ -152,7 +157,7 @@ module EDL
   end
   
   class Clip < Event
-    attr_accessor :clip_name, :timewarp, :transition, :ends_with_a_transition
+    attr_accessor :clip_name, :timewarp, :transition, :ends_with_a_transition, :outgoing_transition_duration
     
     # Returns true if the clip starts with a transiton (not a jump cut)
     def has_transition?
@@ -173,8 +178,37 @@ module EDL
     end
     alias_method :slug?, :black?
     
-    def length
+    # Get the record length of the event (how long it occupies in the EDL without an eventual outgoing dissolve)
+    def rec_length
       (rec_end_tc - rec_start_tc).to_i
+    end
+    
+    # How much this source clip occupies, taking timewarps and transitions into account
+    def src_length
+      vanilla_length = rec_length
+      # Expand transition
+      vanilla_length += @outgoing_transition_duration if ends_with_a_transition?
+      # Expand timewarp
+      if timewarp
+        (vanilla_length / 100.0 * (timewarp.speed_in_percent).abs).ceil
+      else
+        vanilla_length
+      end
+    end
+
+    # Capture from this timecode to complete this event including timewarps and transitions
+    def capture_from_tc
+      src_start_tc
+    end
+    
+    # Capture up to this timecode to complete this event including timewarps and transitions
+    def capture_to_tc
+      src_start_tc + src_length
+    end
+    
+    # How long does the capture need to be to complete this event including timewarps and transitions
+    def capture_len
+      (capture_to_tc - capture_from_tc)
     end
     
     def generator?
@@ -255,6 +289,18 @@ module EDL
     end
   end
   
+  # EDL clip comment matcher, a generic one
+  class CommentMatcher < Matcher
+    def initialize
+      super(/\* (.+)/)
+    end
+    
+    def apply(stack, line)
+      stack[-1].comments << line.scan(@regexp).flatten.pop.strip
+    end
+  end
+
+  # Clip name matcher
   class NameMatcher < Matcher
     def initialize
       super(/\* FROM CLIP NAME:(\s+)(.+)/)
@@ -262,6 +308,7 @@ module EDL
     
     def apply(stack, line)
       stack[-1].clip_name = line.scan(@regexp).flatten.pop.strip
+      CommentMatcher.new.apply(stack, line)
     end
   end
   
@@ -272,6 +319,7 @@ module EDL
     
     def apply(stack, line)
       stack[-1].transition.effect = line.scan(@regexp).flatten.pop.strip
+      CommentMatcher.new.apply(stack, line)
     end
   end
   
@@ -367,7 +415,7 @@ module EDL
       evt.transition = case transition_idx
         when 'D'
           d = Dissolve.new
-          d.duration = props.delete(:duration)
+          d.duration = props.delete(:duration).to_i
           d
         when /W/
           w = Wipe.new
@@ -379,8 +427,8 @@ module EDL
       end
       
       # Give a hint on the incoming clip as well
-      if evt.transition
-        stack[-1].ends_with_a_transition = true if stack[-1]
+      if evt.transition && stack[-1]
+        stack[-1].ends_with_a_transition, stack[-1].outgoing_transition_duration = true, evt.transition.duration
       end
       
       props.each_pair { | k, v | evt.send("#{k}=", v) }
@@ -401,7 +449,7 @@ module EDL
     end
     
     def get_matchers
-      [ EventMatcher.new(@fps), EffectMatcher.new, NameMatcher.new, TimewarpMatcher.new(@fps) ]
+      [ EventMatcher.new(@fps), EffectMatcher.new, NameMatcher.new, TimewarpMatcher.new(@fps), CommentMatcher.new ]
     end
     
     def parse(io)
@@ -426,6 +474,5 @@ module EDL
       Timecode.at(*args)
     end
   end
-  
-  
+
 end
