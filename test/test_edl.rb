@@ -259,6 +259,19 @@ class EventMatcherTest < Test::Unit::TestCase
       assert EDL::EventMatcher.new(25).matches?(pat), "EventMatcher should match #{pat}"
     end
   end
+  
+  def test_framerate_passed_to_timecodes
+    m = EDL::EventMatcher.new(30)
+    clip = m.apply([],
+      '020  008C     V     C        08:04:24:24 08:04:25:19 01:00:25:22 01:00:26:17'
+    )
+    assert_equal 30, clip.rec_start_tc.fps 
+    assert_equal 30, clip.rec_end_tc.fps 
+
+    assert_equal 30, clip.src_start_tc.fps 
+    assert_equal 30, clip.src_end_tc.fps 
+    
+  end
 end
 
 class CommentMatcherTest  < Test::Unit::TestCase
