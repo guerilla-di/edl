@@ -2,6 +2,9 @@ require "rubygems"
 require "timecode"
 require 'stringio'
 
+require File.dirname(__FILE__) + '/edl/transition'
+require File.dirname(__FILE__) + '/edl/timewarp'
+
 # A simplistic EDL parser. Current limitations: no support for DF timecode, no support for audio,
 # no support for split edits, no support for key effects, no support for audio
 module EDL
@@ -11,7 +14,6 @@ module EDL
   # Represents an EDL, is returned from the parser. Traditional operation is functional style, i.e.
   #  edl.renumbered.without_transitions.without_generators
   class List < Array
-    
     
     def events #:nodoc:
       STDERR.puts "EDL::List#events is deprecated and will be removed, use EDL::List as an array instead"
@@ -224,6 +226,11 @@ module EDL
     def rec_length
       (rec_end_tc - rec_start_tc).to_i
     end
+
+    # Get the record length of the event (how long it occupies in the EDL without an eventual outgoing transition)
+    def rec_length_with_transition
+      (rec_end_tc - rec_start_tc).to_i + outgoing_transition_duration.to_i
+    end
     
     # How long does the capture need to be to complete this event including timewarps and transitions
     def src_length
@@ -242,7 +249,7 @@ module EDL
 
     # Capture from (and including!) this timecode to complete this event including timewarps and transitions
     def capture_from_tc
-      src_start_tc
+      timewarp ? timewarp.actual_src_start_tc : src_start_tc
     end
     
     # Capture up to (but not including!) this timecode to complete this event including timewarps and transitions
@@ -253,68 +260,6 @@ module EDL
     # Returns true if this event is a generator
     def generator?
       black? || (%(AX GEN).include?(reel))
-    end
-  end
-    
-  # Represents a transition. We currently only support dissolves and SMPTE wipes
-  # Will be avilable as EDL::Clip#transition
-  class Transition
-    
-    # Length of the transition in frames
-    attr_accessor :duration
-    
-    attr_accessor :effect
-  end
-  
-  # Represents a dissolve
-  class Dissolve < Transition
-  end
-  
-  # Represents an SMPTE wipe
-  class Wipe < Transition
-    attr_accessor :smpte_wipe_index
-  end
-  
-  # Represents a timewarp. Will be placed in EDL::Event#timewarp
-  class Timewarp
-    
-    # What is the actual framerate of the clip (float)
-    attr_accessor :actual_framerate
-
-    attr_accessor :clip #:nodoc:
-    
-    # Get the speed in percent (reverse will report -100)
-    def speed_in_percent
-      (actual_framerate.to_f / clip.src_start_tc.fps) * 100
-    end
-    
-    # Get the actual end of source that is needed for the timewarp to be computed properly,
-    # round up to not generate stills at ends of clips
-    def actual_src_end_tc
-      unless reverse?
-        clip.src_start_tc + actual_length_of_source
-      else
-        clip.src_start_tc
-      end
-    end
-    
-    def actual_src_start_tc
-      unless reverse?
-        clip.src_start_tc
-      else
-        clip.src_start_tc - actual_length_of_source
-      end
-    end
-    
-    # Returns the true number of frames that is needed to complete the timewarp edit
-    def actual_length_of_source
-      length_in_edit = (clip.src_end_tc - clip.src_start_tc).to_i
-      ((length_in_edit / 25.0) * actual_framerate).ceil.abs
-    end
-    
-    # Is the clip reversed?
-    def reverse?
-      actual_framerate < 0
     end
   end
   

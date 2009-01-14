@@ -369,21 +369,28 @@ class SpeedupAndFadeTest < Test::Unit::TestCase
     
     assert_equal 2, list.length
     first_evt = list[0]
+
+    assert_equal "01:00:00:00", first_evt.capture_from_tc.to_s,
+      "Will need to capture 40 seconds even though the event is smaller"
     
     assert_equal "01:00:40:00", first_evt.capture_to_tc.to_s,
       "Will need to capture 40 seconds even though the event is smaller"
   end
 
-  def test_proper_timings_with_reverse
+  def test_proper_timings_with_reverse_speedup
     list = EDL::Parser.new.parse(File.open(SPEEDUP_REVERSE_AND_FADEOUT))
     
     assert_equal 2, list.length
     first_evt = list[0]
+    assert first_evt.reverse?
+    assert_equal 689, first_evt.rec_length
+    assert_equal 689 + 25, first_evt.rec_length_with_transition
     
-    assert_equal "01:00:00:00", first_evt.capture_from_tc.to_s
+    
+    assert_equal "01:00:00:00", first_evt.capture_from_tc.to_s,
+      "Should start with the lesser timecode"
     assert_equal "01:00:40:00", first_evt.capture_to_tc.to_s,
       "Will need to capture 40 seconds even though the event is smaller"
   end
-  
   
 end

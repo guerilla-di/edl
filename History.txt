@@ -1,5 +1,6 @@
 === 0.0.2 / 2000-01-14
 
+* Improve documentation
 * Allow parsing from string and not only from IOs
 * Do not store original EDL lines anymore
 * Deprecate EDL::Clip - everything is an EDL::Event now
