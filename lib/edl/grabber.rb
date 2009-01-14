@@ -2,7 +2,7 @@ module EDL
   # When initialized with a file and passed an EDL, will generate thumbnail images
   # of the first frame of every event. It is assumed that the movie file starts at the same
   # frame as the first EDL event.
-  class Grabber
+  class Grabber #:nodoc:
     attr_accessor :ffmpeg_bin, :offset
     def initialize(with_file)
       @source_path = with_file

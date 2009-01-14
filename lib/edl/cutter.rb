@@ -1,6 +1,6 @@
 module EDL
   # Can chop an offline edit into events according to the EDL
-  class Cutter
+  class Cutter #:nodoc:
     def initialize(source_path)
       @source_path = source_path
     end
@@ -18,7 +18,7 @@ module EDL
     end
   end
   
-  class FFMpegCutter < Cutter
+  class FFMpegCutter < Cutter #:nodoc:
     def cut_segment(evt, start_at, end_at)
       source_dir, source_file = File.dirname(@source_path), File.basename(@source_path)
       dest_segment = File.join(source_dir, ('%s_%s' % [evt.num, source_file]))

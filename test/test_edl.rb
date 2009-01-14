@@ -7,13 +7,15 @@ require 'test/unit'
 require 'flexmock'
 require 'flexmock/test_unit'
 
-TRAILER_EDL      = File.dirname(__FILE__) + '/samples/TRAILER_EDL.edl'
-SIMPLE_DISSOLVE  = File.dirname(__FILE__) + '/samples/SIMPLE_DISSOLVE.EDL'
-SPLICEME         = File.dirname(__FILE__) + '/samples/SPLICEME.EDL'
-SIMPLE_TIMEWARP  = File.dirname(__FILE__) + '/samples/TIMEWARP.EDL'
-SLOMO_TIMEWARP   = File.dirname(__FILE__) + '/samples/TIMEWARP_HALF.EDL'
-FORTY_FIVER      = File.dirname(__FILE__) + '/samples/45S_SAMPLE.EDL'
-REVERSE          = File.dirname(__FILE__) + '/samples/REVERSE.EDL'
+TRAILER_EDL                 = File.dirname(__FILE__) + '/samples/TRAILER_EDL.edl'
+SIMPLE_DISSOLVE             = File.dirname(__FILE__) + '/samples/SIMPLE_DISSOLVE.EDL'
+SPLICEME                    = File.dirname(__FILE__) + '/samples/SPLICEME.EDL'
+SIMPLE_TIMEWARP             = File.dirname(__FILE__) + '/samples/TIMEWARP.EDL'
+SLOMO_TIMEWARP              = File.dirname(__FILE__) + '/samples/TIMEWARP_HALF.EDL'
+FORTY_FIVER                 = File.dirname(__FILE__) + '/samples/45S_SAMPLE.EDL'
+REVERSE                     = File.dirname(__FILE__) + '/samples/REVERSE.EDL'
+SPEEDUP_AND_FADEOUT         = File.dirname(__FILE__) + '/samples/SPEEDUP_AND_FADEOUT.EDL'
+SPEEDUP_REVERSE_AND_FADEOUT = File.dirname(__FILE__) + '/samples/SPEEDUP_REVERSE_AND_FADEOUT.EDL'
 
 class TestEvent < Test::Unit::TestCase
   def test_attributes_defined
@@ -58,41 +60,41 @@ class TestParser < Test::Unit::TestCase
     p = EDL::Parser.new
     assert_nothing_raised{ @edl = p.parse File.read(SIMPLE_DISSOLVE) }
     assert_kind_of EDL::List, @edl
-    assert_equal 2, @edl.events.length
+    assert_equal 2, @edl.length
   end
     
   def test_dissolve
     p = EDL::Parser.new
     assert_nothing_raised{ @edl = p.parse File.open(SIMPLE_DISSOLVE) }
     assert_kind_of EDL::List, @edl
-    assert_equal 2, @edl.events.length
+    assert_equal 2, @edl.length
     
-    first = @edl.events[0]
+    first = @edl[0]
     assert_kind_of EDL::Event, first
     
-    second = @edl.events[1]
+    second = @edl[1]
     assert_kind_of EDL::Event, second
     assert second.has_transition?
     
     no_trans = @edl.without_transitions
     
-    assert_equal 2, no_trans.events.length
+    assert_equal 2, no_trans.length
     target_tc = (Timecode.parse('01:00:00:00') + 43)
-    assert_equal target_tc, no_trans.events[0].rec_end_tc, 
+    assert_equal target_tc, no_trans[0].rec_end_tc, 
       "The incoming clip should have been extended by the length of the dissolve"
     
     target_tc = Timecode.parse('01:00:00:00')
-    assert_equal target_tc, no_trans.events[1].rec_start_tc
+    assert_equal target_tc, no_trans[1].rec_start_tc
       "The outgoing clip should have been left in place"
   end
   
   def test_spliced
     p = EDL::Parser.new
     assert_nothing_raised{ @edl = p.parse(File.open(SPLICEME)) }
-    assert_equal 2, @edl.events.length
+    assert_equal 2, @edl.length
     
     spliced = @edl.spliced
-    assert_equal 1, spliced.events.length, "Should have been spliced to one event"
+    assert_equal 1, spliced.length, "Should have been spliced to one event"
   end
 end
 
@@ -101,15 +103,15 @@ class TimewarpMatcherTest < Test::Unit::TestCase
   def test_parses_as_one_event
     @edl = EDL::Parser.new.parse(File.open(SIMPLE_TIMEWARP))
     assert_kind_of EDL::List, @edl
-    assert_equal 1, @edl.events.length
+    assert_equal 1, @edl.length
   end
 
   def test_timewarp_attributes
     @edl = EDL::Parser.new.parse(File.open(SIMPLE_TIMEWARP))
     assert_kind_of EDL::List, @edl
-    assert_equal 1, @edl.events.length
+    assert_equal 1, @edl.length
     
-    clip = @edl.events[0]
+    clip = @edl[0]
     assert clip.has_timewarp?, "Should respond true to has_timewarp?"
     assert_not_nil clip.timewarp
     assert_kind_of EDL::Timewarp, clip.timewarp
@@ -118,12 +120,13 @@ class TimewarpMatcherTest < Test::Unit::TestCase
     assert_equal "03:03:24:18", clip.timewarp.actual_src_end_tc.to_s
     assert_equal 124, clip.timewarp.actual_length_of_source
     assert !clip.timewarp.reverse?
+    assert !clip.reverse?
     
   end
   
   def test_timwarp_slomo
     @edl = EDL::Parser.new.parse(File.open(SLOMO_TIMEWARP))
-    clip = @edl.events[0]
+    clip = @edl[0]
     assert clip.has_timewarp?, "Should respond true to has_timewarp?"
     assert_not_nil clip.timewarp
     assert_kind_of EDL::Timewarp, clip.timewarp
@@ -137,14 +140,15 @@ class TimewarpMatcherTest < Test::Unit::TestCase
     assert !clip.timewarp.reverse?
     
   end
+
 end
 
 class ReverseTimewarpTest < Test::Unit::TestCase
   def test_parse
     @edl = EDL::Parser.new.parse(File.open(REVERSE))
-    assert_equal 1, @edl.events.length
+    assert_equal 1, @edl.length
     
-    clip = @edl.events[0]
+    clip = @edl[0]
     assert_equal 52, clip.rec_length
     
     assert clip.has_timewarp?, "Should respond true to has_timewarp?"
@@ -152,6 +156,8 @@ class ReverseTimewarpTest < Test::Unit::TestCase
     
     assert_equal( -25, tw.actual_framerate.to_i)
     assert tw.reverse?
+    assert clip.reverse?
+    assert clip.reversed?
     assert_equal 52, clip.src_length
     assert_equal clip.src_start_tc, tw.actual_src_end_tc
     assert_equal clip.src_start_tc - 52, tw.actual_src_start_tc
@@ -193,7 +199,7 @@ class EventMatcherTest < Test::Unit::TestCase
     assert_equal evt_len, clip.rec_length
     assert_equal evt_len, clip.src_length
     
-    assert_equal evt_len, clip.capture_len
+    assert_equal evt_len, clip.capture_length
     
   end
   
@@ -350,9 +356,34 @@ class ComplexTest < Test::Unit::TestCase
     complex = EDL::Parser.new.parse(File.open(FORTY_FIVER))
     
     from_zero = complex.from_zero
-    assert_equal '00:00:00:00', from_zero.events[0].rec_start_tc.to_s,
+    assert_equal '00:00:00:00', from_zero[0].rec_start_tc.to_s,
       "The starting timecode of the first event should have been shifted to zero"
-    assert_equal '00:00:42:16', from_zero.events[-1].rec_end_tc.to_s,
+    assert_equal '00:00:42:16', from_zero[-1].rec_end_tc.to_s,
       "The ending timecode of the last event should have been shifted 10 hours back"
   end
+end
+
+class SpeedupAndFadeTest < Test::Unit::TestCase
+  def test_proper_timings
+    list = EDL::Parser.new.parse(File.open(SPEEDUP_AND_FADEOUT))
+    
+    assert_equal 2, list.length
+    first_evt = list[0]
+    
+    assert_equal "01:00:40:00", first_evt.capture_to_tc.to_s,
+      "Will need to capture 40 seconds even though the event is smaller"
+  end
+
+  def test_proper_timings_with_reverse
+    list = EDL::Parser.new.parse(File.open(SPEEDUP_REVERSE_AND_FADEOUT))
+    
+    assert_equal 2, list.length
+    first_evt = list[0]
+    
+    assert_equal "01:00:00:00", first_evt.capture_from_tc.to_s
+    assert_equal "01:00:40:00", first_evt.capture_to_tc.to_s,
+      "Will need to capture 40 seconds even though the event is smaller"
+  end
+  
+  
 end

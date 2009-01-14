@@ -12,11 +12,13 @@ module EDL
   #  edl.renumbered.without_transitions.without_generators
   class List < Array
     
-    def events
+    
+    def events #:nodoc:
+      STDERR.puts "EDL::List#events is deprecated and will be removed, use EDL::List as an array instead"
       self
     end
     
-    # Return the same EDL with all dissolves stripped and replaced by the clips under them
+    # Return the same EDL with all dissolves stripped and replaced by the clips underneath
     def without_transitions
       # Find dissolves
       cpy = []
@@ -51,6 +53,7 @@ module EDL
       self.class.new(cpy)
     end
     
+    # Return the same EDL, with events renumbered starting from 001
     def renumbered
       renumed = self.dup
       pad = renumed.length.to_s.length
@@ -125,21 +128,50 @@ module EDL
   
   # Represents an edit event
   class Event
-    attr_accessor :num, 
-      :reel, 
-      :track,
-      :src_start_tc, 
-      :src_end_tc, 
-      :rec_start_tc, 
-      :rec_end_tc,
-      :comments,
+    # Event number as in the EDL
+    attr_accessor :num
+
+    # Reel name as in the EDL
+    attr_accessor :reel
     
-      :clip_name,
-      :timewarp,
-      :transition,
-      :ends_with_a_transition,
-      :outgoing_transition_duration
+    # Event tracks as in the EDL
+    attr_accessor :track
+
+    # Source start timecode of the start frame as in the EDL,
+    # no timewarps or dissolves included
+    attr_accessor :src_start_tc
+
+    # Source end timecode of the last frame as in the EDL,
+    # no timewarps or dissolves included
+    attr_accessor :src_end_tc
+
+    # Record start timecode of the event in the master as in the EDL
+    attr_accessor :rec_start_tc 
+
+    # Record end timecode of the event in the master as in the EDL,
+    # outgoing transition is not included
+    attr_accessor :rec_end_tc
+
+    # Array of comment lines verbatim (all comments are included)
+    attr_accessor :comments
+
+    # Clip name contained in FROM CLIP NAME: comment
+    attr_accessor :clip_name
+
+    # Timewarp metadata (an EDL::Timewarp), or nil if no retime is made
+    attr_accessor :timewarp
+
+    # Incoming transition metadata (EDL::Transition), or nil if no transition is used
+    attr_accessor :transition
     
+    # Whether the event ends with an outgoing transition. 
+    # Also available as ends_with_a_transition?
+    attr_accessor :ends_with_a_transition
+
+    # How long is the incoming transition on the next event
+    attr_accessor :outgoing_transition_duration
+    
+    # Output a textual description (will not work as an EDL line!)
     def to_s
       %w( num reel track src_start_tc src_end_tc rec_start_tc rec_end_tc).map{|a| self.send(a).to_s}.join("  ")
     end
@@ -148,10 +180,17 @@ module EDL
       to_s
     end
     
-    def comments
+    
+    def comments #:nodoc:
       @comments ||= []
       @comments
     end
+    
+    # Is the clip reversed in the edit?
+    def reverse?
+      (timewarp && timewarp.reverse?)
+    end
+    alias_method :reversed?, :reverse?
     
     def copy_properties_to(evt)
       %w( num reel track src_start_tc src_end_tc rec_start_tc rec_end_tc).each do | k |
@@ -170,21 +209,23 @@ module EDL
       !!ends_with_a_transition
     end
     
+    # Returns true if the clip has a timewarp (speed ramp, motion memory, you name it)
     def has_timewarp?
       !timewarp.nil?
     end
     
+    # Is this a black slug?
     def black?
       reel == 'BL'
     end
     alias_method :slug?, :black?
     
-    # Get the record length of the event (how long it occupies in the EDL without an eventual outgoing dissolve)
+    # Get the record length of the event (how long it occupies in the EDL without an eventual outgoing transition)
     def rec_length
       (rec_end_tc - rec_start_tc).to_i
     end
     
-    # How much this source clip occupies, taking timewarps and transitions into account
+    # How long does the capture need to be to complete this event including timewarps and transitions
     def src_length
       vanilla_length = rec_length
       # Expand transition
@@ -196,20 +237,17 @@ module EDL
         vanilla_length
       end
     end
+    
+    alias_method :capture_length, :src_length
 
-    # Capture from this timecode to complete this event including timewarps and transitions
+    # Capture from (and including!) this timecode to complete this event including timewarps and transitions
     def capture_from_tc
       src_start_tc
     end
     
-    # Capture up to this timecode to complete this event including timewarps and transitions
+    # Capture up to (but not including!) this timecode to complete this event including timewarps and transitions
     def capture_to_tc
       src_start_tc + src_length
-    end
-    
-    # How long does the capture need to be to complete this event including timewarps and transitions
-    def capture_len
-      (capture_to_tc - capture_from_tc)
     end
     
     # Returns true if this event is a generator
@@ -221,24 +259,33 @@ module EDL
   # Represents a transition. We currently only support dissolves and SMPTE wipes
   # Will be avilable as EDL::Clip#transition
   class Transition
-    attr_accessor :duration, :effect
+    
+    # Length of the transition in frames
+    attr_accessor :duration
+    
+    attr_accessor :effect
   end
   
   # Represents a dissolve
-  class Dissolve < Transition; end
+  class Dissolve < Transition
+  end
   
   # Represents an SMPTE wipe
   class Wipe < Transition
     attr_accessor :smpte_wipe_index
   end
   
-  # Represents a timewarp
+  # Represents a timewarp. Will be placed in EDL::Event#timewarp
   class Timewarp
-    attr_accessor :actual_framerate
-    attr_accessor :clip
     
+    # What is the actual framerate of the clip (float)
+    attr_accessor :actual_framerate
+
+    attr_accessor :clip #:nodoc:
+    
+    # Get the speed in percent (reverse will report -100)
     def speed_in_percent
-      (actual_framerate.to_f / DEFAULT_FPS.to_f ) * 100
+      (actual_framerate.to_f / clip.src_start_tc.fps) * 100
     end
     
     # Get the actual end of source that is needed for the timewarp to be computed properly,
@@ -265,10 +312,13 @@ module EDL
       ((length_in_edit / 25.0) * actual_framerate).ceil.abs
     end
     
+    # Is the clip reversed?
     def reverse?
       actual_framerate < 0
     end
   end
+  
+  #:stopdoc:
   
   # A generic matcher
   class Matcher
@@ -439,6 +489,8 @@ module EDL
       evt # FIXME - we dont need to return this is only used by tests
     end
   end
+  
+  #:startdoc:
   
   # Is used to parse an EDL
   class Parser
