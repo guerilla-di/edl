@@ -18,8 +18,10 @@ SPEEDUP_AND_FADEOUT         = File.dirname(__FILE__) + '/samples/SPEEDUP_AND_FAD
 SPEEDUP_REVERSE_AND_FADEOUT = File.dirname(__FILE__) + '/samples/SPEEDUP_REVERSE_AND_FADEOUT.EDL'
 FCP_REVERSE                 = File.dirname(__FILE__) + '/samples/FCP_REVERSE.EDL'
 
-def tc(tc)
-  Timecode.parse(tc)
+class String
+  def tc
+    Timecode.parse(self)
+  end
 end
 
 class TestEvent < Test::Unit::TestCase
@@ -167,9 +169,7 @@ end
 
 class FinalCutProReverseTest < Test::Unit::TestCase
   def test_parses_properly
-    list = EDL::Parser.new.parse(File.open(FCP_REVERSE))
-    assert_equal 1, list.length
-    first_evt = list[0]
+    first_evt = EDL::Parser.new.parse(File.open(FCP_REVERSE)).pop
     
     assert_equal 1000, first_evt.rec_length
     assert_equal "01:00:00:00", first_evt.rec_start_tc.to_s
@@ -179,8 +179,8 @@ class FinalCutProReverseTest < Test::Unit::TestCase
     assert_not_nil first_evt.timewarp
     assert_equal 1000, first_evt.src_length
     
-    assert_equal "01:00:00:00", first_evt.timewarp.source_used_from.to_s
-    assert_equal "01:00:40:00", first_evt.timewarp.source_used_upto.to_s
+    assert_equal "01:00:00:00".tc, first_evt.timewarp.source_used_from
+    assert_equal "01:00:40:00".tc, first_evt.timewarp.source_used_upto
 
   end
 end
@@ -400,25 +400,21 @@ class SpeedupAndFadeTest < Test::Unit::TestCase
     
     assert_equal 1000, first_evt.src_length
     
-    assert_equal "01:00:00:00", first_evt.capture_from_tc.to_s,
-      "Will need to capture 40 seconds minus 1 frame that FCP simply forgets"
-
+    assert_equal "01:00:00:00", first_evt.capture_from_tc.to_s
     assert_equal "01:00:40:00", first_evt.capture_to_tc.to_s
   end
 
   def test_proper_timings_with_reverse_speedup
-    list = EDL::Parser.new.parse(File.open(SPEEDUP_REVERSE_AND_FADEOUT))
-    
-    assert_equal 2, list.length
-    first_evt = list[0]
+    first_evt = EDL::Parser.new.parse(File.open(SPEEDUP_REVERSE_AND_FADEOUT)).shift
+
     assert first_evt.reverse?
     assert_equal 689, first_evt.rec_length
     assert_equal 714, first_evt.rec_length_with_transition
     
-    assert_equal tc("01:00:00:00"), first_evt.capture_from_tc,
+    assert_equal "01:00:00:00".tc, first_evt.capture_from_tc,
       "Should start with the lesser timecode"
     
-    assert_equal "01:00:40:00", first_evt.capture_to_tc.to_s,
+    assert_equal "01:00:39:23".tc, first_evt.capture_to_tc,
       "Will need to capture 40 seconds minus 1 frame that FCP simply forgets"
   end
   

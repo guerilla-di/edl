@@ -33,7 +33,8 @@ module EDL
     # clip is our LAST frame, otherwise it's the first
     def source_used_from
       # TODO: account for the 2 frame deficiency which is suspicious
-      reverse? ? ((@clip.src_start_tc + 2) - actual_length_of_source) : @clip.src_start_tc
+      cmp = 2
+      reverse? ? (@clip.src_start_tc - actual_length_of_source + 1) : @clip.src_start_tc
     end
     
     # Where to end the capture? This is also dependent on whether we are a reverse or not
