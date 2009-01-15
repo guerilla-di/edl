@@ -136,6 +136,34 @@ context "An Event should" do
     e.should.be.reverse
     e.should.be.reversed
   end
+  
+  specify "report capture_from_tc as the source start without a timewarp" do
+    e = EDL::Event.new(:src_start_tc => "1h".tc)
+    e.capture_from_tc.should.equal "1h".tc
+  end
+  
+  specify "consult the timewarp for capture_from_tc if a timewarp is there" do
+    tw = flexmock
+    tw.should_receive(:source_used_from).and_return(:something)
+    
+    e = EDL::Event.new(:timewarp => tw)
+    e.capture_from_tc.should.equal :something
+  end
+
+  specify "report capture_to_tc as record length plus transition when no timewarp present" do
+    e = EDL::Event.new(:src_end_tc => "1h 10s".tc, :outgoing_transition_duration => 2 )
+    e.capture_to_tc.should.equal "1h 10s 2f".tc
+  end
+
+  specify "consult the timewarp for capture_to_tc if timewarp is present" do
+    tw = flexmock
+    tw.should_receive(:source_used_upto).and_return(:something)
+
+    e = EDL::Event.new(:timewarp => tw)
+    e.capture_to_tc.should.equal :something
+  end
+
+
 end
 
 context "A Parser should" do
