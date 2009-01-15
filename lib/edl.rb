@@ -280,7 +280,7 @@ module EDL
           d
         when /W(\d+)/
           w = Wipe.new
-          w.duration = props.delete(:duration)
+          w.duration = props.delete(:duration).to_i
           w.smpte_wipe_index = transition_idx.gsub(/W/, '')
           w
         else
