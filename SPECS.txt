@@ -38,7 +38,7 @@
 * be parsed properly
 
 == A Final Cut Pro originating reverse should
-* be interpreted properly (FAILURE - 1)
+* be interpreted properly
 
 == EventMatcher should
 * produce an Event
@@ -70,6 +70,6 @@
 * be parsed cleanly
 
 == A FinalCutPro speedup and reverse with fade at the end should
-* parse cleanly (FAILURE - 2)
+* parse cleanly
 
-49 specifications, 1 empty (144 requirements), 2 failures
+49 specifications, 1 empty (145 requirements), 0 failures
