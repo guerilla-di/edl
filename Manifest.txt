@@ -1,12 +1,13 @@
-.DS_Store
 History.txt
 Manifest.txt
 README.txt
 Rakefile
+SPECS.txt
 bin/edl
 illustr/edl-explain.ai
 lib/edl.rb
 lib/edl/cutter.rb
+lib/edl/event.rb
 lib/edl/grabber.rb
 lib/edl/timewarp.rb
 lib/edl/transition.rb

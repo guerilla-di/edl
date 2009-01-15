@@ -8,3 +8,7 @@ Hoe.new('edl', EDL::VERSION) do |p|
   p.extra_deps << "flexmock" << "timecode" << "test-spec"
   p.remote_rdoc_dir = 'edl'
 end
+
+task "specs" do
+  `specrb test/* --rdox > SPECS.txt`
+end

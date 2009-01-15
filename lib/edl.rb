@@ -337,7 +337,7 @@ module EDL
     end
     
     # Init a Timecode object from the passed elements with the passed framerate
-    def self.timecode_from_line_elements(elements, fps)
+    def self.timecode_from_line_elements(elements, fps) #:nodoc:
       args = (0..3).map{|_| elements.shift.to_i} + [fps.to_f]
       Timecode.at(*args)
     end

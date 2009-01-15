@@ -1,5 +1,6 @@
 === 0.0.2 / 2000-01-14
 
+* Fix reverse timewarps
 * Migrate to specs
 * Rename EDL::Event.ends_with_a_transition? to ends_with_transition?
 * Improve documentation

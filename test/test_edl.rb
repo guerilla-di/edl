@@ -517,7 +517,7 @@ context "A FinalCutPro speedup and reverse with fade at the end should" do
     first_evt.rec_length_with_transition.should.equal 714 
     
     tw = first_evt.timewarp
-    tw.source_used_from.should.equal "1h".tc
+    tw.source_used_from.should.equal "1h 1f".tc
     tw.source_used_upto.should.equal "1h 40s".tc
   end
 end

@@ -18,7 +18,14 @@ http://en.wikipedia.org/wiki/Edit_decision_list
 
 == PROBLEMS:
 
-No support for audio, no support for split edits, no support for key effects
+There is currently no support for:
+
+* drop-frame TC
+* audio
+* split edits
+* key effects
+
+Some reverse/timewarp combinations can produce source dificiencies of 1 frame
 
 == INSTALL:
 
