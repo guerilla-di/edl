@@ -16,6 +16,10 @@ http://en.wikipedia.org/wiki/Edit_decision_list
 
 * Timecode gem (sudo gem install timecode)
 
+== PROBLEMS:
+
+No support for audio, no support for split edits, no support for key effects
+
 == INSTALL:
 
 * sudo gem install edl
