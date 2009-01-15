@@ -10,7 +10,6 @@ lib/edl/event.rb
 lib/edl/grabber.rb
 lib/edl/timewarp.rb
 lib/edl/transition.rb
-test/.DS_Store
 test/samples/45S_SAMPLE.EDL
 test/samples/FCP_REVERSE.EDL
 test/samples/REVERSE.EDL
