@@ -137,6 +137,20 @@ context "An Event should" do
     e.should.be.reversed
   end
   
+  specify "report speed as 100 percent without a timewarp" do
+    e = EDL::Event.new
+    e.speed.should.equal 100
+  end
+
+  specify "consult the timewarp for speed" do
+    tw = flexmock
+    tw.should_receive(:speed).and_return(:something)
+
+    e = EDL::Event.new(:timewarp => tw)
+    e.speed.should.equal :something
+  end
+
+  
   specify "report capture_from_tc as the source start without a timewarp" do
     e = EDL::Event.new(:src_start_tc => "1h".tc)
     e.capture_from_tc.should.equal "1h".tc
