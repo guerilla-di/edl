@@ -1,3 +1,8 @@
+=== 0.0.5 / 2000-01-14
+
+* EDL::Event#starts_with_transition? is an alias
+* EDL::Event#incoming_transition_duration works as a shortcut for EDL::Transition#duration
+
 === 0.0.4 / 2000-01-14
 
 * EDL::Event#speed works as a shortcut for timewarp speed

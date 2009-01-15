@@ -150,6 +150,32 @@ context "An Event should" do
     e.speed.should.equal :something
   end
 
+  specify "report false for starts_with_transition? if transision is nil" do
+    e = EDL::Event.new
+    e.should.respond_to :starts_with_transition?
+    e.should.not.be.starts_with_transition
+  end
+
+  specify "report zero for incoming_transition_duration if transision is nil" do
+    e = EDL::Event.new
+    e.should.respond_to :incoming_transition_duration
+    e.incoming_transition_duration.should.zero
+  end
+
+  specify "report true for starts_with_transition? if transision is not nil" do
+    e = EDL::Event.new :transition => true
+    e.should.respond_to :starts_with_transition?
+    e.should.starts_with_transition
+  end
+
+  specify "consult the transition for incoming_transition_duration if it's present" do
+    tr = flexmock
+    tr.should_receive(:duration).and_return(:something)
+    
+    e = EDL::Event.new(:transition => tr)
+    e.should.respond_to :incoming_transition_duration
+    e.incoming_transition_duration.should.equal :something
+  end
   
   specify "report capture_from_tc as the source start without a timewarp" do
     e = EDL::Event.new(:src_start_tc => "1h".tc)
@@ -319,6 +345,7 @@ context "A reverse timewarp EDL coming from Avid should" do
 end
 
 context "A Final Cut Pro originating reverse should" do
+  
   specify "be interpreted properly" do
     e = EDL::Parser.new.parse(File.open(FCP_REVERSE)).pop
     
@@ -332,6 +359,10 @@ context "A Final Cut Pro originating reverse should" do
     e.timewarp.should.not.be nil
     
     tw = e.timewarp
+    
+    tw.speed.should.equal -100.0
+    e.speed.should.equal  -100.0
+    
     tw.source_used_from.should.equal "1h".tc
     tw.source_used_upto.should.equal "1h 40s".tc
   end

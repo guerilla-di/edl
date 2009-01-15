@@ -6,10 +6,9 @@ require File.dirname(__FILE__) + '/edl/event'
 require File.dirname(__FILE__) + '/edl/transition'
 require File.dirname(__FILE__) + '/edl/timewarp'
 
-# A simplistic EDL parser. Current limitations: no support for DF timecode, no support for audio,
-# no support for split edits, no support for key effects, no support for audio
+# A simplistic EDL parser
 module EDL
-  VERSION = "0.0.4"
+  VERSION = "0.0.5"
   DEFAULT_FPS = 25
   
   # Represents an EDL, is returned from the parser. Traditional operation is functional style, i.e.

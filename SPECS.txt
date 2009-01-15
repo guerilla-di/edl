@@ -19,6 +19,16 @@
 * support capture_length as an alias to src_length
 * delegate src_length to the timewarp if it is there
 * report reverse? and reversed? based on the timewarp
+* report speed as 100 percent without a timewarp
+* consult the timewarp for speed
+* report false for starts_with_transition? if transision is nil
+* report zero for incoming_transition_duration if transision is nil
+* report true for starts_with_transition? if transision is not nil
+* consult the transition for incoming_transition_duration if it's present
+* report capture_from_tc as the source start without a timewarp
+* consult the timewarp for capture_from_tc if a timewarp is there
+* report capture_to_tc as record length plus transition when no timewarp present
+* consult the timewarp for capture_to_tc if timewarp is present
 
 == A Parser should
 * store the passed framerate
@@ -72,4 +82,4 @@
 == A FinalCutPro speedup and reverse with fade at the end should
 * parse cleanly
 
-49 specifications, 1 empty (145 requirements), 0 failures
+59 specifications, 1 empty (161 requirements), 0 failures

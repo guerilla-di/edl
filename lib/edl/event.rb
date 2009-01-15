@@ -78,9 +78,15 @@ module EDL
   
     # Returns true if the clip starts with a transiton (not a jump cut)
     def has_transition?
-      !transition.nil?
+      !!@transition
     end
-  
+    alias_method :starts_with_transition?, :has_transition?
+    
+    # The duration of the incoming transition, or 0 if no transition is used
+    def incoming_transition_duration
+      @transition ? @transition.duration : 0
+    end
+    
     # Returns true if the clip ends with a transition (if the next clip starts with a transition)
     def ends_with_transition?
       outgoing_transition_duration > 0
@@ -128,7 +134,7 @@ module EDL
     def speed
       @timewarp ? @timewarp.speed : 100
     end
-  
+    
     # Returns true if this event is a generator
     def generator?
       black? || (%(AX GEN).include?(reel))
