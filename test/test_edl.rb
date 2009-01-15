@@ -207,7 +207,7 @@ context "A Parser should" do
       "The outgoing clip should have been left in place"
   end
   
-  specify "should return a spliced EDL if the sources allow" do
+  specify "return a spliced EDL if the sources allow" do
     lambda{ @spliced = EDL::Parser.new.parse(File.open(SPLICEME)).spliced }.should.not.raise
 
     @spliced.length.should.equal 1
@@ -362,7 +362,7 @@ context "EventMatcher should" do
     )
   end
 
-  specify "should generate a Wipe" do
+  specify "generate a Wipe" do
     m = EDL::EventMatcher.new(25)
     wipe = m.apply([],
       '025  GEN      V     W001  025 00:00:55:10 00:00:58:11 01:00:29:19 01:00:32:20'
@@ -448,7 +448,7 @@ context "EffectMatcher should" do
     EDL::EffectMatcher.new.matches?(line).should.equal true
   end
 
-  specify "should apply the effect name to the transition of the last event on the stack" do
+  specify "apply the effect name to the transition of the last event on the stack" do
     line = "* EFFECT NAME: CROSS DISSOLVE"
     mok_evt, mok_transition = flexmock, flexmock
     cmt = []
@@ -465,56 +465,59 @@ context "EffectMatcher should" do
 
 end
 
-class ComplexTest < Test::Unit::TestCase
-  def test_parses_cleanly
+context "A complex EDL passed via Parser should" do
+  specify "parse without errors" do
     assert_nothing_raised { EDL::Parser.new.parse(File.open(FORTY_FIVER)) }
   end
   
-  def test_from_zero
+  # TODO: this does not belong here
+  specify "be properly rewritten from zero" do
     complex = EDL::Parser.new.parse(File.open(FORTY_FIVER))
-    
     from_zero = complex.from_zero
-    assert_equal '00:00:00:00', from_zero[0].rec_start_tc.to_s,
-      "The starting timecode of the first event should have been shifted to zero"
-    assert_equal '00:00:42:16', from_zero[-1].rec_end_tc.to_s,
-      "The ending timecode of the last event should have been shifted 10 hours back"
+    
+    # Should have the same number of events
+    from_zero.length.should.equal complex.length
+    
+    from_zero[0].rec_start_tc.should.be.zero
+    from_zero[-1].rec_end_tc.should.equal '00:00:42:16'.tc
   end
 end
 
-class SpeedupAndFadeTest < Test::Unit::TestCase
-  def test_proper_timings
+context "A FinalCutPro speedup with fade at the end should" do
+  specify "be parsed cleanly" do
     list = EDL::Parser.new.parse(File.open(SPEEDUP_AND_FADEOUT))
     
-    assert_equal 2, list.length
+    list.length.should.equal 2
+    
     first_evt = list[0]
     
-    assert first_evt.has_timewarp?
-    assert_not_nil first_evt.timewarp
-
-    assert_equal 689,  first_evt.rec_length
-    assert_equal 714,  first_evt.rec_length_with_transition
-    assert_equal 1000, first_evt.timewarp.actual_length_of_source
+    tw = first_evt.timewarp
+    tw.should.be.kind_of EDL::Timewarp
     
-    assert_equal 140,  first_evt.timewarp.speed
+    first_evt.rec_length.should.equal 689
+    first_evt.rec_length_with_transition.should.equal 714
+    
+    tw.actual_length_of_source.should.equal 1000
+    tw.speed.should.equal 140
     
     assert_equal 1000, first_evt.src_length
     
     assert_equal "01:00:00:00", first_evt.capture_from_tc.to_s
     assert_equal "01:00:40:00", first_evt.capture_to_tc.to_s
   end
+end
 
-  def test_proper_timings_with_reverse_speedup
+context "A FinalCutPro speedup and reverse with fade at the end should" do
+  specify "parse cleanly" do
     first_evt = EDL::Parser.new.parse(File.open(SPEEDUP_REVERSE_AND_FADEOUT)).shift
-
-    assert first_evt.reverse?
-    assert_equal 689, first_evt.rec_length
-    assert_equal 714, first_evt.rec_length_with_transition
     
-    assert_equal "01:00:00:00".tc, first_evt.capture_from_tc,
-      "Should start with the lesser timecode"
+    first_evt.should.be.reverse
     
-    assert_equal "01:00:39:23".tc, first_evt.capture_to_tc,
-      "Will need to capture 40 seconds minus 1 frame that FCP simply forgets"
+    first_evt.rec_length.should.equal 689
+    first_evt.rec_length_with_transition.should.equal 714 
+    
+    tw = first_evt.timewarp
+    tw.source_used_from.should.equal "1h".tc
+    tw.source_used_upto.should.equal "1h 40s".tc
   end
-  
 end
