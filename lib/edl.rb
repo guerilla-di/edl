@@ -2,6 +2,7 @@ require "rubygems"
 require "timecode"
 require 'stringio'
 
+require File.dirname(__FILE__) + '/edl/event'
 require File.dirname(__FILE__) + '/edl/transition'
 require File.dirname(__FILE__) + '/edl/timewarp'
 
@@ -26,7 +27,7 @@ module EDL
       cpy = []
       each_with_index do | e, i |
         # A dissolve always FOLLOWS the incoming clip
-        if e.ends_with_a_transition?
+        if e.ends_with_transition?
           dissolve = self[i+1]
           len = dissolve.transition.duration.to_i
           
@@ -126,132 +127,6 @@ module EDL
     end
   end
   
-  # Represents an edit event
-  class Event
-    # Event number as in the EDL
-    attr_accessor :num
-
-    # Reel name as in the EDL
-    attr_accessor :reel
-    
-    # Event tracks as in the EDL
-    attr_accessor :track
-
-    # Source start timecode of the start frame as in the EDL,
-    # no timewarps or dissolves included
-    attr_accessor :src_start_tc
-
-    # Source end timecode of the last frame as in the EDL,
-    # no timewarps or dissolves included
-    attr_accessor :src_end_tc
-
-    # Record start timecode of the event in the master as in the EDL
-    attr_accessor :rec_start_tc 
-
-    # Record end timecode of the event in the master as in the EDL,
-    # outgoing transition is not included
-    attr_accessor :rec_end_tc
-
-    # Array of comment lines verbatim (all comments are included)
-    attr_accessor :comments
-
-    # Clip name contained in FROM CLIP NAME: comment
-    attr_accessor :clip_name
-
-    # Timewarp metadata (an EDL::Timewarp), or nil if no retime is made
-    attr_accessor :timewarp
-
-    # Incoming transition metadata (EDL::Transition), or nil if no transition is used
-    attr_accessor :transition
-    
-    # Whether the event ends with an outgoing transition. 
-    # Also available as ends_with_a_transition?
-    attr_accessor :ends_with_a_transition
-
-    # How long is the incoming transition on the next event
-    attr_accessor :outgoing_transition_duration
-    
-    # Output a textual description (will not work as an EDL line!)
-    def to_s
-      %w( num reel track src_start_tc src_end_tc rec_start_tc rec_end_tc).map{|a| self.send(a).to_s}.join("  ")
-    end
-    
-    def inspect
-      to_s
-    end
-    
-    def comments #:nodoc:
-      @comments ||= []
-      @comments
-    end
-    
-    # Is the clip reversed in the edit?
-    def reverse?
-      (timewarp && timewarp.reverse?)
-    end
-    alias_method :reversed?, :reverse?
-    
-    def copy_properties_to(evt)
-      %w( num reel track src_start_tc src_end_tc rec_start_tc rec_end_tc).each do | k |
-        evt.send("#{k}=", send(k)) if evt.respond_to?(k)
-      end
-      evt
-    end
-    
-    # Returns true if the clip starts with a transiton (not a jump cut)
-    def has_transition?
-      !transition.nil?
-    end
-    
-    # Returns true if the clip ends with a transition (if the next clip starts with a transition)
-    def ends_with_a_transition?
-      !!ends_with_a_transition
-    end
-    
-    # Returns true if the clip has a timewarp (speed ramp, motion memory, you name it)
-    def has_timewarp?
-      !timewarp.nil?
-    end
-    
-    # Is this a black slug?
-    def black?
-      reel == 'BL'
-    end
-    alias_method :slug?, :black?
-    
-    # Get the record length of the event (how long it occupies in the EDL without an eventual outgoing transition)
-    def rec_length
-      (rec_end_tc.to_i - rec_start_tc.to_i).to_i
-    end
-
-    # Get the record length of the event (how long it occupies in the EDL without an eventual outgoing transition)
-    def rec_length_with_transition
-      rec_length + outgoing_transition_duration.to_i
-    end
-    
-    # How long does the capture need to be to complete this event including timewarps and transitions
-    def src_length
-      @timewarp ? @timewarp.actual_length_of_source : rec_length_with_transition
-    end
-    
-    alias_method :capture_length, :src_length
-
-    # Capture from (and including!) this timecode to complete this event including timewarps and transitions
-    def capture_from_tc
-      timewarp ? timewarp.source_used_from : src_start_tc
-    end
-    
-    # Capture up to (but not including!) this timecode to complete this event including timewarps and transitions
-    def capture_to_tc
-      timewarp ? timewarp.source_used_upto : (src_start_tc + rec_length_with_transition)
-    end
-    
-    # Returns true if this event is a generator
-    def generator?
-      black? || (%(AX GEN).include?(reel))
-    end
-  end
-  
   #:stopdoc:
   
   # A generic matcher
@@ -267,7 +142,7 @@ module EDL
     end
     
     def matches?(line)
-      line =~ @regexp
+      !!(line =~ @regexp)
     end
     
     def apply(stack, line)
@@ -403,7 +278,7 @@ module EDL
           d = Dissolve.new
           d.duration = props.delete(:duration).to_i
           d
-        when /W/
+        when /W(\d+)/
           w = Wipe.new
           w.duration = props.delete(:duration)
           w.smpte_wipe_index = transition_idx.gsub(/W/, '')
@@ -414,7 +289,7 @@ module EDL
       
       # Give a hint on the incoming clip as well
       if evt.transition && stack[-1]
-        stack[-1].ends_with_a_transition, stack[-1].outgoing_transition_duration = true, evt.transition.duration
+        stack[-1].outgoing_transition_duration = evt.transition.duration
       end
       
       props.each_pair { | k, v | evt.send("#{k}=", v) }
