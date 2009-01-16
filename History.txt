@@ -1,3 +1,8 @@
+=== 0.0.6 / 2000-01-14
+
+* Fix comments in events appearing twice
+* Capture extra comments that have no star at the beginning as fallback
+
 === 0.0.5 / 2000-01-14
 
 * EDL::Event#starts_with_transition? is an alias

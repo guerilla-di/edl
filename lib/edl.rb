@@ -8,7 +8,7 @@ require File.dirname(__FILE__) + '/edl/timewarp'
 
 # A simplistic EDL parser
 module EDL
-  VERSION = "0.0.5"
+  VERSION = "0.0.6"
   DEFAULT_FPS = 25
   
   # Represents an EDL, is returned from the parser. Traditional operation is functional style, i.e.
@@ -157,6 +157,21 @@ module EDL
     
     def apply(stack, line)
       stack[-1].comments << line.scan(@regexp).flatten.pop.strip
+    end
+  end
+  
+  # Fallback matcher for things like FINAL CUT PRO REEL
+  class FallbackMatcher < Matcher
+    def initialize
+      super(/^(\w)(.+)/)
+    end
+    
+    def apply(stack, line)
+      begin
+        stack[-1].comments << line.scan(@regexp).flatten.join.strip
+      rescue NoMethodError 
+        raise ApplyError.new("Line can only be a comment but no event was on the stack", line)
+      end
     end
   end
 
@@ -322,14 +337,13 @@ module EDL
       stack, matchers = List.new, get_matchers
       until io.eof?
         current_line = io.gets.strip
-        matchers.each do | matcher |
-          next unless matcher.matches?(current_line)
-          
-          begin
-            matcher.apply(stack, current_line)
-          rescue Matcher::ApplyError => e
-            STDERR.puts "Cannot parse #{current_line} - #{e}"
-          end
+        m = matchers.find{|m| m.matches?(current_line) }
+        next unless m
+        
+        begin
+          m.apply(stack, current_line)
+        rescue Matcher::ApplyError => e
+          STDERR.puts "Cannot parse #{current_line} - #{e}"
         end
       end
       stack

@@ -282,6 +282,17 @@ context "A Parser should" do
     @spliced[0].src_start_tc.should.equal '06:42:50:18'.tc
     @spliced[0].src_end_tc.should.equal   '06:42:52:16'.tc
   end
+  
+  specify "not apply any Matchers if a match is found" do
+    p = EDL::Parser.new
+    m1 = flexmock
+    m1.should_receive(:matches?).with("plop").once.and_return(true)
+    m1.should_receive(:apply).once
+    
+    flexmock(p).should_receive(:get_matchers).once.and_return([m1, m1])
+    
+    p.parse("plop")
+  end
 end
 
 context "A TimewarpMatcher should" do
@@ -485,6 +496,38 @@ context "CommentMatcher should" do
   end
 end
 
+context "FallbackMatcher should" do
+  specify "match anything" do
+    line = "SOME"
+    EDL::FallbackMatcher.new.matches?(line).should.equal true
+
+    line = "OR ANOTHER  "
+    EDL::FallbackMatcher.new.matches?(line).should.equal true
+  end
+  
+  specify "not match whitespace" do
+    line = "\s\s\s\r\n\r"
+    EDL::FallbackMatcher.new.matches?(line).should.equal false
+  end
+  
+  specify "append the matched content to comments" do
+    e = flexmock
+    cmts = []
+    e.should_receive(:comments).and_return(cmts)
+    
+    EDL::FallbackMatcher.new.apply([e], "FOOBAR")
+    cmts.should.equal ["FOOBAR"]
+
+    EDL::FallbackMatcher.new.apply([e], "FINAL CUT PRO REEL: 006-I REPLACED BY: 006I")
+    cmts.should.equal ["FOOBAR", "FINAL CUT PRO REEL: 006-I REPLACED BY: 006I"]
+  end
+  
+  specify "raise an ApplyError if no clip is on the stack" do
+    lambda { EDL::FallbackMatcher.new.apply([], "FINAL CUT PRO REEL: 006-I REPLACED BY: 006I") }.should.raise(EDL::Matcher::ApplyError)
+  end
+  
+end
+
 context "ClipNameMatcher should" do
   specify "match a clip name" do
     line = "* FROM CLIP NAME:  TAPE_6-10.MOV"
@@ -577,6 +620,14 @@ context "A FinalCutPro speedup with fade at the end should" do
     
     assert_equal "01:00:00:00", first_evt.capture_from_tc.to_s
     assert_equal "01:00:40:00", first_evt.capture_to_tc.to_s
+  end
+end
+
+context "In the trailer EDL the event 4 should" do
+  specify "not have too many comments" do
+    evts = EDL::Parser.new.parse(File.open(TRAILER_EDL))
+    evt = evts[6]
+    evt.comments.length.should.equal(5)
   end
 end
 

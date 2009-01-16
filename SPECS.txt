@@ -38,6 +38,7 @@
 * parse from a File/IOish
 * properly parse a dissolve
 * return a spliced EDL if the sources allow
+* not apply any Matchers if a match is found (empty)
 
 == A TimewarpMatcher should
 * not create any extra events when used within a Parser
@@ -62,6 +63,12 @@
 * match a comment
 * apply the comment to the last clip on the stack
 
+== FallbackMatcher should
+* match anything
+* not match whitespace
+* append the matched content to comments
+* raise an ApplyError if no clip is on the stack
+
 == ClipNameMatcher should
 * match a clip name
 * not match a simple comment
@@ -79,7 +86,10 @@
 == A FinalCutPro speedup with fade at the end should
 * be parsed cleanly
 
+== In the trailer EDL the event 4 should
+* not have too many comments
+
 == A FinalCutPro speedup and reverse with fade at the end should
 * parse cleanly
 
-59 specifications, 1 empty (161 requirements), 0 failures
+65 specifications, 2 empty (168 requirements), 0 failures

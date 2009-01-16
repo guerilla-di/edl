@@ -60,7 +60,7 @@ module EDL
     end
     
     def outgoing_transition_duration #:nodoc:
-      @outgoing_transition_duration || 0
+      @outgoing_transition_duration ||= 0
     end
   
     # Is the clip reversed in the edit?
