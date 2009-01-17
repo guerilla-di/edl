@@ -110,6 +110,11 @@ context "An Event should" do
     e.src_length.should.equal "2s".tc.to_i 
   end
   
+  specify "support line_number" do
+    EDL::Event.new.line_number.should.be.nil
+    EDL::Event.new(:line_number => 3).line_number.should.equal 3
+  end
+  
   specify "support capture_length as an alias to src_length" do
     tw = flexmock
     tw.should_receive(:actual_length_of_source).and_return(:something)
