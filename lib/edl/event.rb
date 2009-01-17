@@ -1,5 +1,5 @@
 module EDL
-  # Represents an edit event
+  # Represents an edit event (or, more specifically, an EDL line denoting a clip being part of an EDL event)
   class Event
     # Event number as in the EDL
     attr_accessor :num

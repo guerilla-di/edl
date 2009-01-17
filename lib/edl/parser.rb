@@ -1,6 +1,6 @@
 module EDL
   
-  # Used to parse an EDL
+  # Is used to parse an EDL
   class Parser
   
     attr_reader :fps
@@ -16,16 +16,16 @@ module EDL
     end
   
     # Parse a passed File or IO object line by line, or the whole string
-    def parse(io)
-      return parse(StringIO.new(io.to_s)) unless io.respond_to?(:eof?)
+    def parse(io_or_string)
+      return parse(StringIO.new(io_or_string.to_s)) unless io_or_string.respond_to?(:eof?)
     
       stack, matchers = List.new, get_matchers
     
       at_line = 0
-      until io.eof?
+      until io_or_string.eof?
         at_line += 1
 
-        current_line = io.gets.strip
+        current_line = io_or_string.gets.strip
         m = matchers.find{|m| m.matches?(current_line) }
         next unless m
       
