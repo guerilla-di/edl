@@ -40,6 +40,9 @@ module EDL
     # How long is the incoming transition on the next event
     attr_accessor :outgoing_transition_duration
     
+    # Where is this event located in the original file
+    attr_accessor :line_number
+    
     def initialize(opts = {})
       opts.each_pair{|k,v| send("#{k}=", v) }
       yield(self) if block_given?

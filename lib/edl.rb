@@ -335,13 +335,18 @@ module EDL
       return parse(StringIO.new(io.to_s)) unless io.respond_to?(:eof?)
       
       stack, matchers = List.new, get_matchers
+      
+      at_line = 0
       until io.eof?
+        at_line += 1
+
         current_line = io.gets.strip
         m = matchers.find{|m| m.matches?(current_line) }
         next unless m
         
         begin
           m.apply(stack, current_line)
+          stack[-1].line_number = at_line if m.is_a?(EventMatcher)
         rescue Matcher::ApplyError => e
           STDERR.puts "Cannot parse #{current_line} - #{e}"
         end

@@ -1,5 +1,6 @@
 === 0.0.7 / 2000-01-18
 
+* Register line_number in the original EDL for parsed events
 * Preserve the star in comments that have it
 
 === 0.0.6 / 2000-01-14

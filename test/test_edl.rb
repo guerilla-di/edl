@@ -293,6 +293,17 @@ context "A Parser should" do
     result = p.parse("plop")
     result.should.be.empty
   end
+  
+  specify "register line numbers of the detected events" do
+    p = EDL::Parser.new
+    events = p.parse(File.open(SPLICEME))
+    
+    events[0].line_number.should.not.be.nil
+    events[0].line_number.should.equal 4
+    
+    events[1].line_number.should.not.be.nil
+    events[1].line_number.should.equal 5
+  end
 end
 
 context "A TimewarpMatcher should" do
