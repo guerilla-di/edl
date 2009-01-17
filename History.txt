@@ -1,3 +1,7 @@
+=== 0.0.7 / 2000-01-18
+
+* Preserve the star in comments that have it
+
 === 0.0.6 / 2000-01-14
 
 * Fix comments in events appearing twice

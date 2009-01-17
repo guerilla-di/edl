@@ -290,8 +290,8 @@ context "A Parser should" do
     m1.should_receive(:apply).once
     
     flexmock(p).should_receive(:get_matchers).once.and_return([m1, m1])
-    
-    p.parse("plop")
+    result = p.parse("plop")
+    result.should.be.empty
   end
 end
 
@@ -492,7 +492,7 @@ context "CommentMatcher should" do
     2.times { mok_evt.should_receive(:comments).and_return(comments) }
     2.times { EDL::CommentMatcher.new.apply([mok_evt], line) }
 
-    mok_evt.comments.should.equal ["COMMENT: PURE BULLSHIT", "COMMENT: PURE BULLSHIT"] 
+    mok_evt.comments.should.equal ["* COMMENT: PURE BULLSHIT", "* COMMENT: PURE BULLSHIT"] 
   end
 end
 
@@ -548,7 +548,7 @@ context "ClipNameMatcher should" do
     mok_evt.should_receive(:comments).and_return(comments).once
     
     EDL::NameMatcher.new.apply([mok_evt], line)
-    comments.should.equal ["FROM CLIP NAME:  TAPE_6-10.MOV"] 
+    comments.should.equal ["* FROM CLIP NAME:  TAPE_6-10.MOV"] 
   end
   
 end
@@ -576,7 +576,7 @@ context "EffectMatcher should" do
     
     EDL::EffectMatcher.new.apply([mok_evt], line)
     
-    cmt.should.equal ["EFFECT NAME: CROSS DISSOLVE"]
+    cmt.should.equal ["* EFFECT NAME: CROSS DISSOLVE"]
   end
 
 end

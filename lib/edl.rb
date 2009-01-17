@@ -8,8 +8,8 @@ require File.dirname(__FILE__) + '/edl/timewarp'
 
 # A simplistic EDL parser
 module EDL
-  VERSION = "0.0.6"
-  DEFAULT_FPS = 25
+  VERSION = "0.0.7"
+  DEFAULT_FPS = 25.0
   
   # Represents an EDL, is returned from the parser. Traditional operation is functional style, i.e.
   #  edl.renumbered.without_transitions.without_generators
@@ -156,7 +156,7 @@ module EDL
     end
     
     def apply(stack, line)
-      stack[-1].comments << line.scan(@regexp).flatten.pop.strip
+      stack[-1].comments.push("* %s" % line.scan(@regexp).flatten.pop.strip)
     end
   end
   
