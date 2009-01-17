@@ -144,7 +144,8 @@ context "An Event should" do
   
   specify "report speed as 100 percent without a timewarp" do
     e = EDL::Event.new
-    e.speed.should.equal 100
+    e.speed.should.be.kind_of Float
+    e.speed.should.equal 100.0
   end
 
   specify "consult the timewarp for speed" do

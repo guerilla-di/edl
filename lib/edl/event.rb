@@ -135,7 +135,7 @@ module EDL
     
     # Speed of this clip in percent relative to the source speed. 100 for non-timewarped events
     def speed
-      @timewarp ? @timewarp.speed : 100
+      @timewarp ? @timewarp.speed : 100.0
     end
     
     # Returns true if this event is a generator
