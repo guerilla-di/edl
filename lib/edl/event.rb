@@ -111,7 +111,7 @@ module EDL
       (rec_end_tc.to_i - rec_start_tc.to_i).to_i
     end
 
-    # Get the record length of the event (how long it occupies in the EDL without an eventual outgoing transition)
+    # Get the record length of the event (how long it occupies in the EDL with an eventual outgoing transition)
     def rec_length_with_transition
       rec_length + outgoing_transition_duration.to_i
     end
