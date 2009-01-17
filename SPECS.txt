@@ -38,7 +38,8 @@
 * parse from a File/IOish
 * properly parse a dissolve
 * return a spliced EDL if the sources allow
-* not apply any Matchers if a match is found (empty)
+* not apply any Matchers if a match is found
+* register line numbers of the detected events
 
 == A TimewarpMatcher should
 * not create any extra events when used within a Parser
@@ -92,4 +93,4 @@
 == A FinalCutPro speedup and reverse with fade at the end should
 * parse cleanly
 
-65 specifications, 2 empty (168 requirements), 0 failures
+66 specifications, 1 empty (173 requirements), 0 failures
