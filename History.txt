@@ -1,23 +1,27 @@
-=== 0.0.7 / 2000-01-18
+=== 0.0.8 / 2009-01-18
+
+* Switch Rubyforge project to guerilla-di
+
+=== 0.0.7 / 2009-01-18
 
 * Register line_number in the original EDL for parsed events
 * Preserve the star in comments that have it
 
-=== 0.0.6 / 2000-01-14
+=== 0.0.6 / 2009-01-14
 
 * Fix comments in events appearing twice
 * Capture extra comments that have no star at the beginning as fallback
 
-=== 0.0.5 / 2000-01-14
+=== 0.0.5 / 2009-01-14
 
 * EDL::Event#starts_with_transition? is an alias
 * EDL::Event#incoming_transition_duration works as a shortcut for EDL::Transition#duration
 
-=== 0.0.4 / 2000-01-14
+=== 0.0.4 / 2009-01-14
 
 * EDL::Event#speed works as a shortcut for timewarp speed
 
-=== 0.0.2 / 2000-01-14
+=== 0.0.2 / 2009-01-14
 
 * Fix reverse timewarps
 * Migrate to specs
