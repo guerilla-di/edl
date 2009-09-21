@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.description = %q{Work with EDL files from Ruby http://en.wikipedia.org/wiki/Edit_decision_list}
   s.email = ["me@julik.nl"]
   s.extra_rdoc_files = ["History.txt", "Manifest.txt", "README.txt", "SPECS.txt"]
-  s.files = [".DS_Store", "History.txt", "Manifest.txt", "README.txt", "Rakefile", "SPECS.txt", "edl.gemspec", "illustr/edl-explain.ai", "lib/edl.rb", "lib/edl/cutter.rb", "lib/edl/event.rb", "lib/edl/grabber.rb", "lib/edl/parser.rb", "lib/edl/timewarp.rb", "lib/edl/transition.rb", "test/.DS_Store", "test/samples/45S_SAMPLE.EDL", "test/samples/FCP_REVERSE.EDL", "test/samples/REVERSE.EDL", "test/samples/SIMPLE_DISSOLVE.EDL", "test/samples/SPEEDUP_AND_FADEOUT.EDL", "test/samples/SPEEDUP_REVERSE_AND_FADEOUT.EDL", "test/samples/SPLICEME.EDL", "test/samples/TIMEWARP.EDL", "test/samples/TIMEWARP_HALF.EDL", "test/samples/TRAILER_EDL.edl", "test/test_edl.rb"]
+  s.files = ["History.txt", "Manifest.txt", "README.txt", "Rakefile", "SPECS.txt", "edl.gemspec", "illustr/edl-explain.ai", "lib/edl.rb", "lib/edl/cutter.rb", "lib/edl/event.rb", "lib/edl/grabber.rb", "lib/edl/parser.rb", "lib/edl/timewarp.rb", "lib/edl/transition.rb", "test/samples/45S_SAMPLE.EDL", "test/samples/FCP_REVERSE.EDL", "test/samples/REVERSE.EDL", "test/samples/SIMPLE_DISSOLVE.EDL", "test/samples/SPEEDUP_AND_FADEOUT.EDL", "test/samples/SPEEDUP_REVERSE_AND_FADEOUT.EDL", "test/samples/SPLICEME.EDL", "test/samples/TIMEWARP.EDL", "test/samples/TIMEWARP_HALF.EDL", "test/samples/TRAILER_EDL.edl", "test/test_edl.rb"]
   s.has_rdoc = true
   s.rdoc_options = ["--main", "README.txt"]
   s.require_paths = ["lib"]
