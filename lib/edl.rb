@@ -9,7 +9,7 @@ require File.dirname(__FILE__) + '/edl/parser'
 
 # A simplistic EDL parser
 module EDL
-  VERSION = "0.0.9"
+  VERSION = "0.1.0"
   DEFAULT_FPS = 25.0
   
   # Represents an EDL, is returned from the parser. Traditional operation is functional style, i.e.
