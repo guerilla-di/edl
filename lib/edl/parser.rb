@@ -18,15 +18,16 @@ module EDL
     # Parse a passed File or IO object line by line, or the whole string
     def parse(io_or_string)
       return parse(StringIO.new(io_or_string.to_s)) unless io_or_string.respond_to?(:eof?)
-    
+      
       stack, matchers = List.new, get_matchers
-    
+      
       at_line = 0
       until io_or_string.eof?
         at_line += 1
-
+        
         current_line = io_or_string.gets.strip
         m = matchers.find{|m| m.matches?(current_line) }
+        
         next unless m
       
         begin

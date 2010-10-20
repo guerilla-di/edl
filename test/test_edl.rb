@@ -18,6 +18,7 @@ AVID_REVERSE                = File.dirname(__FILE__) + '/samples/REVERSE.EDL'
 SPEEDUP_AND_FADEOUT         = File.dirname(__FILE__) + '/samples/SPEEDUP_AND_FADEOUT.EDL'
 SPEEDUP_REVERSE_AND_FADEOUT = File.dirname(__FILE__) + '/samples/SPEEDUP_REVERSE_AND_FADEOUT.EDL'
 FCP_REVERSE                 = File.dirname(__FILE__) + '/samples/FCP_REVERSE.EDL'
+PLATES                      = File.dirname(__FILE__) + '/samples/PLATES.EDL'
 
 class String
   def tc(fps = Timecode::DEFAULT_FPS)
@@ -601,6 +602,11 @@ end
 context "A complex EDL passed via Parser should" do
   specify "parse without errors" do
     assert_nothing_raised { EDL::Parser.new.parse(File.open(FORTY_FIVER)) }
+  end
+  
+  specify "parse the plates EDL with many events" do
+    evts = EDL::Parser.new.parse(File.read(PLATES))
+    assert_equal 24, evts.length
   end
   
   # TODO: this does not belong here
