@@ -22,6 +22,7 @@ test/samples/SPEEDUP_AND_FADEOUT.EDL
 test/samples/SPEEDUP_REVERSE_AND_FADEOUT.EDL
 test/samples/SPLICEME.EDL
 test/samples/TIMEWARP.EDL
+test/samples/PLATES.EDL
 test/samples/TIMEWARP_HALF.EDL
 test/samples/TRAILER_EDL.edl
 test/test_edl.rb

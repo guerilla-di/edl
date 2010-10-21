@@ -8,7 +8,6 @@ Hoe::RUBY_FLAGS.replace ENV['RUBY_FLAGS'] || "-I#{%w(lib test).join(File::PATH_S
   
 Hoe.spec('edl') do | p |
   p.version = EDL::VERSION
-  p.homepage = "http://guerilla-di.org/edl"
   p.extra_deps = {"flexmock" => ">=0", "timecode" => ">=0.1.9", "test-spec" => ">=0"}
   p.rubyforge_name = 'guerilla-di'
   p.developer('Julik Tarkhanov', 'me@julik.nl')
