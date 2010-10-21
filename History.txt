@@ -1,3 +1,7 @@
+=== 0.1.1 / 2010-10-21
+
+* Fix parsing of files with Windows linebreaks. In an ugly manner.
+
 === 0.0.8 / 2009-01-18
 
 * Switch Rubyforge project to guerilla-di

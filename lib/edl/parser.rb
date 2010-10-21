@@ -16,23 +16,25 @@ module EDL
     end
   
     # Parse a passed File or IO object line by line, or the whole string
-    def parse(io_or_string)
-      return parse(StringIO.new(io_or_string.to_s)) unless io_or_string.respond_to?(:eof?)
+    def parse(input_string_or_io)
+      return parse(input_string_or_io.read) if input_string_or_io.respond_to?(:read)
       
+      # TODO properly normalize line breaks in a stream interface
+      input_string_or_io.gsub!(/(\r\n|\r)/, "\n")
+      input_in_io = StringIO.new(input_string_or_io)
+      
+      # Normalize line breaks
       stack, matchers = List.new, get_matchers
       
-      at_line = 0
-      until io_or_string.eof?
-        at_line += 1
+      until input_in_io.eof?
         
-        current_line = io_or_string.gets.strip
+        current_line = input_in_io.gets.strip
         m = matchers.find{|m| m.matches?(current_line) }
         
         next unless m
-      
         begin
           m.apply(stack, current_line)
-          stack[-1].line_number = at_line if m.is_a?(EventMatcher)
+          stack[-1].line_number = input_in_io.lineno if m.is_a?(EventMatcher)
         rescue Matcher::ApplyError => e
           STDERR.puts "Cannot parse #{current_line} - #{e}"
         end

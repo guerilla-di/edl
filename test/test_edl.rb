@@ -407,6 +407,7 @@ context "EventMatcher should" do
     '024        AX V     C        00:00:00:00 00:00:01:00 01:00:28:19 01:00:29:19', 
     '025        BL V     C        00:00:00:00 00:00:00:00 01:00:29:19 01:00:29:19', 
     '025  GEN      V     D    025 00:00:55:10 00:00:58:11 01:00:29:19 01:00:32:20',
+    '002  REDACTED V     C        03:09:00:13 03:09:55:19 01:00:43:12 01:01:38:18',
   ]
 
   specify "produce an Event" do
@@ -606,7 +607,7 @@ context "A complex EDL passed via Parser should" do
   
   specify "parse the plates EDL with many events" do
     evts = EDL::Parser.new.parse(File.read(PLATES))
-    assert_equal 24, evts.length
+    assert_equal 3, evts.length
   end
   
   # TODO: this does not belong here
