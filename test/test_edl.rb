@@ -605,7 +605,7 @@ context "A complex EDL passed via Parser should" do
     assert_nothing_raised { EDL::Parser.new.parse(File.open(FORTY_FIVER)) }
   end
   
-  specify "parse the plates EDL with many events" do
+  specify "parse the EDL with \\r line breaks properly" do
     evts = EDL::Parser.new.parse(File.read(PLATES))
     assert_equal 3, evts.length
   end

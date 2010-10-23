@@ -1,11 +1,12 @@
 require "rubygems"
 require "timecode"
-require 'stringio'
+require "stringio"
 
 require File.dirname(__FILE__) + '/edl/event'
 require File.dirname(__FILE__) + '/edl/transition'
 require File.dirname(__FILE__) + '/edl/timewarp'
 require File.dirname(__FILE__) + '/edl/parser'
+require File.dirname(__FILE__) + '/edl/linebreak_magician'
 
 # A simplistic EDL parser
 module EDL
