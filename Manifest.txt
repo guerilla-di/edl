@@ -11,6 +11,7 @@ lib/edl/cutter.rb
 lib/edl/event.rb
 lib/edl/grabber.rb
 lib/edl/parser.rb
+lib/edl/linebreak_magician.rb
 lib/edl/timewarp.rb
 lib/edl/transition.rb
 test/.DS_Store
