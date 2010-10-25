@@ -461,6 +461,7 @@ context "EventMatcher should" do
   end
   
   specify "produce a vanilla Event with proper source length" do
+    # This one has EXACTLY 4 frames of source
     m = EDL::EventMatcher.new(25)
     clip = m.apply([], '001  GEN      V     C        00:01:00:00 00:01:00:04 01:00:00:00 01:00:00:04')
     clip.should.be.kind_of EDL::Event
