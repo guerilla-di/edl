@@ -127,8 +127,13 @@ module EDL
     def capture_from_tc
       @timewarp ? @timewarp.source_used_from : src_start_tc
     end
-  
-    # Capture up to (but not including!) this timecode to complete this event including timewarps and transitions
+    
+    # Capture up to AND INCLUDING this timecode to complete this event including timewarps and transitions
+    def capture_to_and_including_tc
+      capture_to_tc - 1
+    end
+    
+    # Capture up to BUT NOT INCLUDING this timecode to complete this event including timewarps and transitions
     def capture_to_tc
       @timewarp ? @timewarp.source_used_upto : (src_end_tc + outgoing_transition_duration)
     end

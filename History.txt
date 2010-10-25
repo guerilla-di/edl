@@ -1,3 +1,7 @@
+=== 0.1.3 / 2010-10-25
+
+* Adds Event#capture_to_and_including_tc which is convenient for frame searches
+
 === 0.1.2 / 2010-10-23
 
 * Fix parsing of files with Windows and \r linebreaks properly

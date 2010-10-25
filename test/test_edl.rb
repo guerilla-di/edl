@@ -202,6 +202,11 @@ context "An Event should" do
     e.capture_to_tc.should.equal "1h 10s 2f".tc
   end
 
+  specify "report capture_to_and_including_tc as record length plus transition when no timewarp present" do
+    e = EDL::Event.new(:src_end_tc => "1h 10s".tc, :outgoing_transition_duration => 2 )
+    e.capture_to_and_including_tc.should.equal "1h 10s 1f".tc
+  end
+
   specify "consult the timewarp for capture_to_tc if timewarp is present" do
     tw = flexmock
     tw.should_receive(:source_used_upto).and_return(:something)
@@ -453,6 +458,13 @@ context "EventMatcher should" do
     
     tr.should.be.kind_of EDL::Dissolve
     tr.duration.should.equal 25
+  end
+  
+  specify "produce a vanilla Event with proper source length" do
+    m = EDL::EventMatcher.new(25)
+    clip = m.apply([], '001  GEN      V     C        00:01:00:00 00:01:00:04 01:00:00:00 01:00:00:04')
+    clip.should.be.kind_of EDL::Event
+    clip.src_length.should.equal 4
   end
   
   specify "set flag on the previous event in the stack when a dissolve is encountered" do
