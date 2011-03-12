@@ -20,4 +20,7 @@ module EDL
     # Which SMPTE wipe is needed
     attr_accessor :smpte_wipe_index
   end
+  
+  class Key < Transition
+  end
 end

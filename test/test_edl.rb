@@ -19,6 +19,7 @@ SPEEDUP_AND_FADEOUT         = File.dirname(__FILE__) + '/samples/SPEEDUP_AND_FAD
 SPEEDUP_REVERSE_AND_FADEOUT = File.dirname(__FILE__) + '/samples/SPEEDUP_REVERSE_AND_FADEOUT.EDL'
 FCP_REVERSE                 = File.dirname(__FILE__) + '/samples/FCP_REVERSE.EDL'
 PLATES                      = File.dirname(__FILE__) + '/samples/PLATES.EDL'
+KEY                         = File.dirname(__FILE__) + '/samples/KEY_TRANSITION.EDL'
 
 class String
   def tc(fps = Timecode::DEFAULT_FPS)
@@ -399,6 +400,14 @@ context "A Final Cut Pro originating reverse should" do
     
     tw.source_used_from.should.equal "1h".tc
     tw.source_used_upto.should.equal "1h 40s".tc
+  end
+end
+
+context "An edit with keyer transition should" do
+  specify "parse correctly" do
+    events = EDL::Parser.new.parse(File.open(KEY))
+    events.length.should.equal 2
+    flunk "Key transition processing is not reliable yet"
   end
 end
 

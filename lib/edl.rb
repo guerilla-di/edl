@@ -290,6 +290,8 @@ module EDL
       evt = Event.new
       transition_idx = props.delete(:transition)
       evt.transition = case transition_idx
+        when 'C'
+          nil
         when 'D'
           d = Dissolve.new
           d.duration = props.delete(:duration).to_i
@@ -299,8 +301,12 @@ module EDL
           w.duration = props.delete(:duration).to_i
           w.smpte_wipe_index = transition_idx.gsub(/W/, '')
           w
+        when 'K'
+          k = Key.new
+          k.duration = props.delete(:duration).to_i
+          k
         else
-          nil
+          raise "Unknown transition type #{transition_idx}"
       end
       
       # Give a hint on the incoming clip as well
