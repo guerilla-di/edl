@@ -407,7 +407,7 @@ context "An edit with keyer transition should" do
   specify "parse correctly" do
     events = EDL::Parser.new.parse(File.open(KEY))
     events.length.should.equal 2
-    flunk "Key transition processing is not reliable yet"
+    flunk "Key transition processing is not reliable yet - no reference"
   end
 end
 
