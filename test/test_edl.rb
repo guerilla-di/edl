@@ -1,4 +1,4 @@
-require "rubuygems"
+require "rubygems"
 require "bundler"
 Bundler.require(:default, :development)
 

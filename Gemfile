@@ -4,7 +4,7 @@ source :rubygems
 gem "timecode"
 
 group :development do
-  gem "test-unit"
+  gem "test-unit", :require => "test/unit"
   gem "jeweler"
   gem "rake"
   gem "flexmock", "~>0.8"
