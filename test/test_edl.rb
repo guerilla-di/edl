@@ -1,12 +1,10 @@
+require "rubuygems"
+require "bundler"
+Bundler.require(:default, :development)
+
 require File.dirname(__FILE__) + '/../lib/edl'
 require File.dirname(__FILE__) + '/../lib/edl/cutter'
 require File.dirname(__FILE__) + '/../lib/edl/grabber'
-
-require 'rubygems'
-require 'test/unit'
-require 'test/spec'
-require 'flexmock'
-require 'flexmock/test_unit'
 
 TRAILER_EDL                 = File.dirname(__FILE__) + '/samples/TRAILER_EDL.edl'
 SIMPLE_DISSOLVE             = File.dirname(__FILE__) + '/samples/SIMPLE_DISSOLVE.EDL'

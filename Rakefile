@@ -1,18 +1,22 @@
 require 'rubygems'
-require 'hoe'
 require './lib/edl.rb'
+require 'jeweler'
 
-# Disable spurious warnings when running tests, ActiveMagic cannot stand -w
-Hoe::RUBY_FLAGS.replace ENV['RUBY_FLAGS'] || "-I#{%w(lib test).join(File::PATH_SEPARATOR)}" + 
-  (Hoe::RUBY_DEBUG ? " #{RUBY_DEBUG}" : '')
+Jeweler::Tasks.new do |gem|
+  gem.version = EDL::VERSION
+  gem.name = "edl"
+  gem.summary = "Parser for EDL (Edit Decision List) files"
+  gem.email = "me@julik.nl"
+  gem.homepage = "http://guerilla-di.org/edl"
+  gem.authors = ["Julik Tarkhanov"]
   
-Hoe.spec('edl') do | p |
-  p.version = EDL::VERSION
-  p.extra_deps = {"flexmock" => ">=0", "timecode" => ">=0.1.9", "test-spec" => ">=0"}
-  p.rubyforge_name = 'guerilla-di'
-  p.developer('Julik Tarkhanov', 'me@julik.nl')
+  # Do not package invisibles
+  gem.files.exclude ".*"
 end
 
-task "specs" do
+Jeweler::RubygemsDotOrgTasks.new
+
+task :specs do
   `specrb test/* --rdox > SPECS.txt`
 end
+task :default => [ :specs ]
