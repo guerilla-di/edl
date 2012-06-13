@@ -9,14 +9,15 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Julik Tarkhanov"]
-  s.date = "2012-01-09"
+  s.date = "2012-06-13"
   s.email = "me@julik.nl"
   s.extra_rdoc_files = [
-    "README.txt"
+    "README.rdoc"
   ]
   s.files = [
+    "Gemfile",
     "History.txt",
-    "README.txt",
+    "README.rdoc",
     "Rakefile",
     "edl.gemspec",
     "illustr/edl-explain.ai",
@@ -44,7 +45,7 @@ Gem::Specification.new do |s|
   ]
   s.homepage = "http://guerilla-di.org/edl"
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.11"
+  s.rubygems_version = "1.8.24"
   s.summary = "Parser for EDL (Edit Decision List) files"
 
   if s.respond_to? :specification_version then
@@ -52,26 +53,26 @@ Gem::Specification.new do |s|
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<timecode>, [">= 0"])
+      s.add_development_dependency(%q<shoulda>, [">= 0"])
       s.add_development_dependency(%q<test-unit>, [">= 0"])
       s.add_development_dependency(%q<jeweler>, [">= 0"])
       s.add_development_dependency(%q<rake>, [">= 0"])
       s.add_development_dependency(%q<flexmock>, ["~> 0.8"])
-      s.add_development_dependency(%q<test-spec>, [">= 0"])
     else
       s.add_dependency(%q<timecode>, [">= 0"])
+      s.add_dependency(%q<shoulda>, [">= 0"])
       s.add_dependency(%q<test-unit>, [">= 0"])
       s.add_dependency(%q<jeweler>, [">= 0"])
       s.add_dependency(%q<rake>, [">= 0"])
       s.add_dependency(%q<flexmock>, ["~> 0.8"])
-      s.add_dependency(%q<test-spec>, [">= 0"])
     end
   else
     s.add_dependency(%q<timecode>, [">= 0"])
+    s.add_dependency(%q<shoulda>, [">= 0"])
     s.add_dependency(%q<test-unit>, [">= 0"])
     s.add_dependency(%q<jeweler>, [">= 0"])
     s.add_dependency(%q<rake>, [">= 0"])
     s.add_dependency(%q<flexmock>, ["~> 0.8"])
-    s.add_dependency(%q<test-spec>, [">= 0"])
   end
 end
 

@@ -16,7 +16,12 @@ end
 
 Jeweler::RubygemsDotOrgTasks.new
 
-task :specs do
-  `specrb test/* --rdox > SPECS.txt`
+require 'rake/testtask'
+desc "Run all tests"
+Rake::TestTask.new("test") do |t|
+  t.libs << "test"
+  t.pattern = 'test/**/test_*.rb'
+  t.verbose = true
 end
-task :default => [ :specs ]
+
+task :default => [ :test ]
