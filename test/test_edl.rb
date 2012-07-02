@@ -422,7 +422,17 @@ context "EventMatcher" do
     '025  GEN      V     D    025 00:00:55:10 00:00:58:11 01:00:29:19 01:00:32:20',
     '002  REDACTED V     C        03:09:00:13 03:09:55:19 01:00:43:12 01:01:38:18',
   ]
-
+  
+  should 'handle the event with multiple audio tracks' do
+    m = EDL::EventMatcher.new(25)
+    
+    clip = m.apply([],
+      '0004 KASS1 A1234V C        00:00:00:00 00:00:16:06  10:00:41:08 10:00:57:14'
+    )
+    assert_kind_of EDL::Event, clip
+    assert_equal "A1234", clip.track
+  end
+  
   should "produce an Event" do
     m = EDL::EventMatcher.new(25)
     
