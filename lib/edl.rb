@@ -154,7 +154,7 @@ module EDL
   # EDL clip comment matcher, a generic one
   class CommentMatcher < Matcher
     def initialize
-      super(/\* (.+)/)
+      super(/\*(.+)/)
     end
     
     def apply(stack, line)
@@ -180,7 +180,7 @@ module EDL
   # Clip name matcher
   class NameMatcher < Matcher
     def initialize
-      super(/\* FROM CLIP NAME:(\s+)(.+)/)
+      super(/\*\s*FROM CLIP NAME:(\s+)(.+)/)
     end
     
     def apply(stack, line)
@@ -191,7 +191,7 @@ module EDL
   
   class EffectMatcher < Matcher
     def initialize
-      super(/\* EFFECT NAME:(\s+)(.+)/)
+      super(/\*\s*EFFECT NAME:(\s+)(.+)/)
     end
     
     def apply(stack, line)
