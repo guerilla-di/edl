@@ -584,6 +584,11 @@ context "ClipNameMatcher" do
     assert EDL::NameMatcher.new.matches?(line)
   end
   
+  should "match a clip name without space after star" do
+    line = "*FROM CLIP NAME:  TAPE_6-10.MOV"
+    assert EDL::NameMatcher.new.matches?(line)
+  end
+  
   should "not match a simple comment" do
     line = "* CRAP"
     assert !EDL::NameMatcher.new.matches?(line)
@@ -611,6 +616,11 @@ context "EffectMatcher" do
 
   should "match a dissolve name" do
     line = "* EFFECT NAME: CROSS DISSOLVE"
+    assert EDL::EffectMatcher.new.matches?(line)
+  end
+
+  should "match a dissolve name without space after the asterisk" do
+    line = "*EFFECT NAME: CROSS DISSOLVE"
     assert EDL::EffectMatcher.new.matches?(line)
   end
 
