@@ -1,5 +1,5 @@
 # -*- ruby -*-
-source :rubygems
+source 'https://rubygems.org'
 
 gem "timecode"
 
