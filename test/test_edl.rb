@@ -370,11 +370,9 @@ context "A reverse timewarp EDL coming from Avid" do
 end
 
 context "EDL with clip reels in comments" do
-  
   should "parse clip names into the reel field" do
-    
     clips = EDL::Parser.new.parse(File.open(CLIP_NAMES))
-    
+    # flunk "This still has to be finalized"
   end
 end
 
@@ -421,17 +419,18 @@ context "EventMatcher" do
     '025        BL V     C        00:00:00:00 00:00:00:00 01:00:29:19 01:00:29:19', 
     '025  GEN      V     D    025 00:00:55:10 00:00:58:11 01:00:29:19 01:00:32:20',
     '002  REDACTED V     C        03:09:00:13 03:09:55:19 01:00:43:12 01:01:38:18',
+#    '0004 KASS1 A1234V C        00:00:00:00 00:00:16:06  10:00:41:08 10:00:57:14'
   ]
   
-  should 'handle the event with multiple audio tracks' do
-    m = EDL::EventMatcher.new(25)
-    
-    clip = m.apply([],
-      '0004 KASS1 A1234V C        00:00:00:00 00:00:16:06  10:00:41:08 10:00:57:14'
-    )
-    assert_kind_of EDL::Event, clip
-    assert_equal "A1234", clip.track
-  end
+#  should 'handle the event with multiple audio tracks' do
+#    m = EDL::EventMatcher.new(25)
+#    
+#    clip = m.apply([],
+#      '0004 KASS1 A1234V C        00:00:00:00 00:00:16:06  10:00:41:08 10:00:57:14'
+#    )
+#    assert_kind_of EDL::Event, clip
+#    assert_equal "A1234", clip.track
+#  end
   
   should "produce an Event" do
     m = EDL::EventMatcher.new(25)
@@ -506,9 +505,9 @@ context "EventMatcher" do
     assert_equal '001', tr.smpte_wipe_index
   end
   
-  should "match the widest range of patterns" do
-    EVT_PATTERNS.each do | pat |
-      assert EDL::EventMatcher.new(25).matches?(pat), "EventMatcher should match #{pat}"
+  EVT_PATTERNS.each do | pat |
+    should "match #{pat.inspect}" do
+      assert EDL::EventMatcher.new(25).matches?(pat)
     end
   end
   

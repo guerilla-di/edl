@@ -10,7 +10,7 @@ require File.dirname(__FILE__) + '/edl/linebreak_magician'
 
 # A simplistic EDL parser
 module EDL
-  VERSION = "0.1.3"
+  VERSION = "0.1.4"
   DEFAULT_FPS = 25.0
   
   # Represents an EDL, is returned from the parser. Traditional operation is functional style, i.e.
@@ -134,7 +134,7 @@ module EDL
   class Matcher
     class ApplyError < RuntimeError
       def initialize(msg, line)
-        super("%s - offending line was '%s'" % [msg, line])
+        super("%s - offending line was %s" % [msg, line.inspect])
       end
     end
     
@@ -158,6 +158,8 @@ module EDL
     end
     
     def apply(stack, line)
+      raise ApplyError.new("No event to attach a comment to", line) if stack.empty?
+      # TODO: we should really remove "* " prefixes from comments
       stack[-1].comments.push("* %s" % line.scan(@regexp).flatten.pop.strip)
     end
   end
