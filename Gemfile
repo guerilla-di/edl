@@ -8,5 +8,6 @@ group :development do
   gem "test-unit", :require => "test/unit"
   gem "jeweler"
   gem "rake"
-  gem "flexmock", "~>0.8"
+  flexmock_ver = (RUBY_VERSION > "1.8") ? "~> 1.3.2" : "~> 0.8"
+  gem "flexmock", flexmock_ver, :require => %w( flexmock flexmock/test_unit )
 end
