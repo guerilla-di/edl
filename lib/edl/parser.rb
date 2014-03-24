@@ -25,6 +25,8 @@ module EDL
       stack, matchers = List.new, get_matchers
       
       while current_line = magic.gets
+        # Remove the stray CRs if they ended up in the line anyway
+        current_line = current_line.strip
         
         m = matchers.find{|m| m.matches?(current_line) }
         

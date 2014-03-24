@@ -1,39 +1,39 @@
-=== 0.1.3 / 2010-10-25
+=== 0.1.3
 
 * Adds Event#capture_to_and_including_tc which is convenient for frame searches
 
-=== 0.1.2 / 2010-10-23
+=== 0.1.2
 
 * Fix parsing of files with Windows and \r linebreaks properly
 
-=== 0.1.1 / 2010-10-21
+=== 0.1.1
 
 * Fix parsing of files with Windows linebreaks. In an ugly manner.
 
-=== 0.0.8 / 2009-01-18
+=== 0.0.8
 
 * Switch Rubyforge project to guerilla-di
 
-=== 0.0.7 / 2009-01-18
+=== 0.0.7
 
 * Register line_number in the original EDL for parsed events
 * Preserve the star in comments that have it
 
-=== 0.0.6 / 2009-01-14
+=== 0.0.6
 
 * Fix comments in events appearing twice
 * Capture extra comments that have no star at the beginning as fallback
 
-=== 0.0.5 / 2009-01-14
+=== 0.0.5
 
 * EDL::Event#starts_with_transition? is an alias
 * EDL::Event#incoming_transition_duration works as a shortcut for EDL::Transition#duration
 
-=== 0.0.4 / 2009-01-14
+=== 0.0.4
 
 * EDL::Event#speed works as a shortcut for timewarp speed
 
-=== 0.0.2 / 2009-01-14
+=== 0.0.2
 
 * Fix reverse timewarps
 * Migrate to specs
@@ -44,7 +44,7 @@
 * Deprecate EDL::Clip - everything is an EDL::Event now
 * Parse and save verbatim comments in EDL::Event#comments
   
-=== 0.0.1 / 2008-12-22
+=== 0.0.1
 
 * 1 major enhancement
 

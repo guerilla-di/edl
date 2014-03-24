@@ -21,6 +21,7 @@ FCP_REVERSE                 = File.dirname(__FILE__) + '/samples/FCP_REVERSE.EDL
 PLATES                      = File.dirname(__FILE__) + '/samples/PLATES.EDL'
 KEY                         = File.dirname(__FILE__) + '/samples/KEY_TRANSITION.EDL'
 CLIP_NAMES                  = File.dirname(__FILE__) + '/samples/REEL_IS_CLIP.txt'
+MIXED_LINEBREAKS            = File.dirname(__FILE__) + '/samples/edl_mixed_line_endings.edl'
 
 class String
   def tc(fps = Timecode::DEFAULT_FPS)
@@ -638,6 +639,13 @@ context "EffectMatcher" do
     assert_equal ["* EFFECT NAME: CROSS DISSOLVE"], cmt
   end
 
+end
+
+context "An EDL with mixed line breaks" do
+  should 'parse without errors' do
+    list = EDL::Parser.new.parse(File.open(MIXED_LINEBREAKS))
+    assert_equal ["* A", "* B", "* C", "* D", "* E", "* F", "* G"], list[0].comments
+  end
 end
 
 context "A complex EDL passed via Parser" do
