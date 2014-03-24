@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "edl"
-  s.version = "0.1.4"
+  s.version = "0.1.5"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Julik Tarkhanov"]
-  s.date = "2014-02-18"
+  s.date = "2014-03-24"
   s.email = "me@julik.nl"
   s.extra_rdoc_files = [
     "README.rdoc"
@@ -42,6 +42,7 @@ Gem::Specification.new do |s|
     "test/samples/TIMEWARP.EDL",
     "test/samples/TIMEWARP_HALF.EDL",
     "test/samples/TRAILER_EDL.edl",
+    "test/samples/edl_mixed_line_endings.edl",
     "test/test_edl.rb"
   ]
   s.homepage = "http://guerilla-di.org/edl"
