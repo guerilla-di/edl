@@ -242,7 +242,7 @@ module EDL
   class EventMatcher < Matcher
 
     # 021  009      V     C        00:39:04:21 00:39:05:09 01:00:26:17 01:00:27:05
-    EVENT_PAT = /(\d+)(\s+)(\w+)(\s+)(\w+)(\s+)(\w+)(\s+)((\w+\s+)?)#{TC} #{TC} #{TC} #{TC}/
+    EVENT_PAT = /(\d+)(\s+)([^\s]+)(\s+)(\w+)(\s+)(\w+)(\s+)((\w+\s+)?)#{TC} #{TC} #{TC} #{TC}/
     
     attr_reader :fps
     
