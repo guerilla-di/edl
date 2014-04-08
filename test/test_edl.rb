@@ -457,6 +457,24 @@ context "EventMatcher" do
     assert_zero clip.outgoing_transition_duration
   end
   
+  should "produce an Event when reel has dots and output a warning" do
+    m = EDL::EventMatcher.new(25)
+    
+    #flexmock($stderr).should_receive(:puts).with("Reel name \"STUPID_EDITOR.MOV\" contains dots or spaces, beware.")
+    
+    clip = m.apply([],
+      '020  STUPIDEDITOR.MOV     V     C        08:04:24:24 08:04:25:19 01:00:25:22 01:00:26:17'
+    )
+    
+    assert_kind_of EDL::Event, clip
+    
+    assert_equal "020", clip.num
+    assert_equal "STUPIDEDITOR.MOV", clip.reel
+    assert_equal "V", clip.track
+    
+    assert_equal '08:04:24:24'.tc, clip.src_start_tc
+  end
+  
   should "produce an Event with dissolve" do
     m = EDL::EventMatcher.new(25)
     
