@@ -143,6 +143,14 @@ module EDL
       @timewarp ? @timewarp.speed : 100.0
     end
     
+    # Sets the reel name and outputs a warning if it contains dots or spaces
+    def reel=(new_reel_name)
+      if new_reel_name =~ /[\s\.]/
+        $stderr.puts "Reel name #{new_reel_name.inspect} contains dots or spaces, beware."
+      end
+      @reel = new_reel_name
+    end
+    
     # Returns true if this event is a generator
     def generator?
       black? || (%(AX GEN).include?(reel))
