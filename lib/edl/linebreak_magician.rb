@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # EDLs sometimes come with \r line breaks, and this is something that fails
 # with Ruby standard line separator detection. We need something to help us
 # with that. In this case we can just do a bulk replace because EDLs will be relatively
