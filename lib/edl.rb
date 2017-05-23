@@ -222,7 +222,7 @@ module EDL
         # FIXME
         tw_start_source_tc = Parser.timecode_from_line_elements(matches, @fps)
       rescue Timecode::Error => e
-        raise ApplyError, "Invalid TC in timewarp (#{e})", line
+        raise ApplyError.new("Invalid TC in timewarp (#{e})", line)
       end
 
       evt_with_tw = stack.reverse.find { |e| e.src_start_tc == tw_start_source_tc && e.reel == from_reel }
@@ -233,7 +233,7 @@ module EDL
         tw.clip = evt_with_tw
         evt_with_tw.timewarp = tw
       else
-        raise ApplyError, 'Cannot find event marked by timewarp', line
+        raise ApplyError.new('Cannot find event marked by timewarp', line)
       end
     end
   end
@@ -285,7 +285,7 @@ module EDL
         begin
           props[k] = EDL::Parser.timecode_from_line_elements(matches, @fps)
         rescue Timecode::Error => e
-          raise ApplyError, "Cannot parse timecode - #{e}", line
+          raise ApplyError.new("Cannot parse timecode - #{e}", line)
         end
       end
 
