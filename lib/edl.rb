@@ -281,7 +281,7 @@ module EDL
       matches.shift
 
       # Then the timecodes
-      %i[src_start_tc src_end_tc rec_start_tc rec_end_tc].each do |k|
+      [:src_start_tc, :src_end_tc, :rec_start_tc, :rec_end_tc].each do |k|
         begin
           props[k] = EDL::Parser.timecode_from_line_elements(matches, @fps)
         rescue Timecode::Error => e
