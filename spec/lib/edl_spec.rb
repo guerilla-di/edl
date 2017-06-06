@@ -452,6 +452,21 @@ describe EDL do
 
       expect('08:04:24:24'.tc).to eq clip.src_start_tc
     end
+    
+    it 'produce an Event when reel has asterisks' do
+      m = EDL::EventMatcher.new(25)
+      
+      clip = m.apply([],
+                    '047  *STUPID*EDITOR* V     C        00:00:38:15 00:00:39:08 01:06:37:03 01:06:37:20 ')
+      
+      expect(clip).to be_a(EDL::Event)
+      
+      expect('047').to eq clip.num
+      expect('*STUPID*EDITOR*').to eq clip.reel
+      expect('V').to eq clip.track
+      
+      expect('00:00:38:15'.tc).to eq clip.src_start_tc
+    end
 
     it 'produce an Event with dissolve' do
       m = EDL::EventMatcher.new(25)
