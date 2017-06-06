@@ -439,15 +439,15 @@ describe EDL do
     it 'produce an Event when reel has dots and output a warning' do
       m = EDL::EventMatcher.new(25)
 
-      # flexmock($stderr).should_receive(:puts).with("Reel name \"STUPID_EDITOR.MOV\" contains dots or spaces, beware.")
+      # flexmock($stderr).should_receive(:puts).with("Reel name \"TIRED_EDITOR.MOV\" contains dots or spaces, beware.")
 
       clip = m.apply([],
-                     '020  STUPIDEDITOR.MOV     V     C        08:04:24:24 08:04:25:19 01:00:25:22 01:00:26:17')
+                     '020  TIREDEDITOR.MOV     V     C        08:04:24:24 08:04:25:19 01:00:25:22 01:00:26:17')
 
       expect(clip).to be_a(EDL::Event)
 
       expect('020').to eq clip.num
-      expect('STUPIDEDITOR.MOV').to eq clip.reel
+      expect('TIREDEDITOR.MOV').to eq clip.reel
       expect('V').to eq clip.track
 
       expect('08:04:24:24'.tc).to eq clip.src_start_tc
@@ -457,12 +457,12 @@ describe EDL do
       m = EDL::EventMatcher.new(25)
       
       clip = m.apply([],
-                    '047  *STUPID*EDITOR* V     C        00:00:38:15 00:00:39:08 01:06:37:03 01:06:37:20 ')
+                    '047  *TIRED*EDITOR* V     C        00:00:38:15 00:00:39:08 01:06:37:03 01:06:37:20 ')
       
       expect(clip).to be_a(EDL::Event)
       
       expect('047').to eq clip.num
-      expect('*STUPID*EDITOR*').to eq clip.reel
+      expect('*TIRED*EDITOR*').to eq clip.reel
       expect('V').to eq clip.track
       
       expect('00:00:38:15'.tc).to eq clip.src_start_tc
@@ -533,17 +533,17 @@ describe EDL do
 
   describe 'CommentMatcher' do
     it 'match a comment' do
-      line = '* COMMENT: PURE BULLSHIT'
+      line = '* COMMENT: PURE GARBAGE'
       expect(EDL::CommentMatcher.new.matches?(line)).to be_truthy
     end
     
     it 'match a comment that that contains an asterisk' do
-      line = '* COMMENT: PURE *BULLSHIT*'
+      line = '* COMMENT: PURE *GARBAGE*'
       expect(EDL::CommentMatcher.new.matches?(line)).to be_truthy
     end
 
     it 'apply the comment to the last clip on the stack' do
-      line = '* COMMENT: PURE BULLSHIT'
+      line = '* COMMENT: PURE GARBAGE'
 
       comments = []
       mok_evt = double
@@ -551,7 +551,7 @@ describe EDL do
       expect(mok_evt).to receive(:comments).exactly(3).times.and_return(comments)
       2.times { EDL::CommentMatcher.new.apply([mok_evt], line) }
 
-      expect(['* COMMENT: PURE BULLSHIT', '* COMMENT: PURE BULLSHIT']).to eq mok_evt.comments
+      expect(['* COMMENT: PURE GARBAGE', '* COMMENT: PURE GARBAGE']).to eq mok_evt.comments
     end
   end
 
@@ -605,7 +605,7 @@ describe EDL do
     end
 
     it 'not match a simple comment' do
-      line = '* CRAP'
+      line = '* JUNK'
       expect(EDL::NameMatcher.new.matches?(line)).to be_falsey
     end
 
