@@ -452,6 +452,21 @@ describe EDL do
 
       expect('08:04:24:24'.tc).to eq clip.src_start_tc
     end
+    
+    it 'produce an Event when reel has asterisks' do
+      m = EDL::EventMatcher.new(25)
+      
+      clip = m.apply([],
+                    '047  *STUPID*EDITOR* V     C        00:00:38:15 00:00:39:08 01:06:37:03 01:06:37:20 ')
+      
+      expect(clip).to be_a(EDL::Event)
+      
+      expect('047').to eq clip.num
+      expect('*STUPID*EDITOR*').to eq clip.reel
+      expect('V').to eq clip.track
+      
+      expect('00:00:38:15'.tc).to eq clip.src_start_tc
+    end
 
     it 'produce an Event with dissolve' do
       m = EDL::EventMatcher.new(25)
@@ -521,6 +536,11 @@ describe EDL do
       line = '* COMMENT: PURE BULLSHIT'
       expect(EDL::CommentMatcher.new.matches?(line)).to be_truthy
     end
+    
+    it 'match a comment that that contains an asterisk' do
+      line = '* COMMENT: PURE *BULLSHIT*'
+      expect(EDL::CommentMatcher.new.matches?(line)).to be_truthy
+    end
 
     it 'apply the comment to the last clip on the stack' do
       line = '* COMMENT: PURE BULLSHIT'
@@ -578,6 +598,11 @@ describe EDL do
       line = '*FROM CLIP NAME:  TAPE_6-10.MOV'
       expect(EDL::NameMatcher.new.matches?(line)).to be_truthy
     end
+    
+    it 'match a clip name containing an asterisk' do
+      line = '* FROM CLIP NAME:  18B_1*'
+      expect(EDL::NameMatcher.new.matches?(line)).to be_truthy
+    end
 
     it 'not match a simple comment' do
       line = '* CRAP'
@@ -610,6 +635,11 @@ describe EDL do
 
     it 'match a dissolve name without space after the asterisk' do
       line = '*EFFECT NAME: CROSS DISSOLVE'
+      expect(EDL::EffectMatcher.new.matches?(line)).to be_truthy
+    end
+    
+    it 'match a dissolve name containing an asterisk' do
+      line = '* EFFECT NAME: *CROSS DISSOLVE'
       expect(EDL::EffectMatcher.new.matches?(line)).to be_truthy
     end
 
