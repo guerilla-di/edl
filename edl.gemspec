@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
   s.date = '2014-03-24'
   s.email = 'me@julik.nl'
   s.extra_rdoc_files = [
-    'README.rdoc'
+    'README.md'
   ]
 
   # Prevent pushing this gem to RubyGemspec.org. To allow pushes either set the 'allowed_push_host'
