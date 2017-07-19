@@ -6,23 +6,25 @@ You can use it to generate capture lists, inspect needed video segments for the 
 and display edit timelines.  Together with the depix you could write your own "blind"
 conform utility in about 10 minutes, no joke.
 
-== SYNOPSIS:
+## Basic usage
 
-   require 'rubygems'
-   require 'edl'
-   
-   list = EDL::Parser.new(fps=25).parse(File.open('OFFLINE.EDL'))
-   list.events.each do | evt |
-     evt.clip_name #=> Boat_Trip_Take1
-     evt.capture_from_tc #=> 01:20:22:10
-     evt.capture_to_tc #=> 01:20:26:15, accounts for outgoing transition AND M2 timewarps
-   end
-  
-== REQUIREMENTS:
+```
+require 'rubygems'
+require 'edl'
+
+list = EDL::Parser.new(fps=25).parse(File.open('OFFLINE.EDL'))
+list.events.each do | evt |
+ evt.clip_name #=> Boat_Trip_Take1
+ evt.capture_from_tc #=> 01:20:22:10
+ evt.capture_to_tc #=> 01:20:26:15, accounts for outgoing transition AND M2 timewarps
+end
+```
+
+## Requirements
 
 * Timecode gem (sudo gem install timecode)
 
-== PROBLEMS:
+## Currently unsupportedl EDL features:
 
 There is currently no support for:
 
@@ -33,8 +35,14 @@ There is currently no support for:
 
 Some reverse/timewarp combinations can produce source dificiencies of 1 frame
 
-== INSTALL:
+## Installation
 
-* sudo gem install edl
+Add the following to your project `Gemfile`:
 
-== LICENSE:
+```
+gem 'edl'
+```
+
+## License
+
+See LICENSE.txt
