@@ -3,7 +3,7 @@ http://en.wikipedia.org/wiki/Edit_decision_list
 
 The library assists in parsing [EDL files](http://en.wikipedia.org/wiki/Edit_decision_list) in CMX 3600 format.
 You can use it to generate capture lists, inspect needed video segments for the assembled program
-and display edit timelines.  Together with the depix you could write your own "blind"
+and display edit timelines. When used together with [depix](https://github.com/guerilla-di/depix) you could write your own "blind"
 conform utility in about 10 minutes, no joke.
 
 ## Basic usage
