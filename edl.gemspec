@@ -6,18 +6,26 @@ $LOAD_PATH.push File.expand_path('../lib', __FILE__)
 require 'edl/version'
 
 Gem::Specification.new do |s|
+  s.required_rubygems_version = ">= 1.2.0"
+
   s.name = 'edl'
   s.version = EDL::VERSION
-
-  s.required_rubygems_version = Gem::Requirement.new('>= 0') if s.respond_to? :required_rubygems_version=
-  s.authors = ['Julik Tarkhanov']
+  s.authors = ['Julik Tarkhanov', 'Philipp Großelfinger']
   s.date = '2014-03-24'
   s.email = 'me@julik.nl'
   s.extra_rdoc_files = [
     'README.rdoc'
   ]
 
-  s.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
+  # Prevent pushing this gem to RubyGemspec.org. To allow pushes either set the 'allowed_push_host'
+  # to allow pushing to a single host or delete this section to allow pushing to any host.
+  if s.respond_to?(:metadata)
+    s.metadata['allowed_push_host'] = "https://rubygems.org"
+  else
+    raise "RubyGems 2.0 or newer is required to protect against public gem pushespec."
+  end
+  
+  s.files         = `git ls-files -z`.split("\x0")
   s.bindir        = 'exe'
   s.executables   = s.files.grep(%r{^exe/}) { |f| File.basename(f) }
   s.require_paths = ['lib']
@@ -27,19 +35,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = '2.0.3'
   s.summary = 'Parser for EDL (Edit Decision List) files'
 
-  if s.respond_to? :specification_version
-    s.specification_version = 4
-
-    if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0')
-      s.add_runtime_dependency 'timecode', '>= 0'
-      s.add_development_dependency 'rake', '>= 0'
-      s.add_development_dependency 'rspec', '~> 3.5'
-    else
-      s.add_dependency 'timecode', '>= 0'
-      s.add_dependency 'rake', '>= 0'
-    end
-  else
-    s.add_dependency 'timecode', '>= 0'
-    s.add_dependency 'rake', '>= 0'
-  end
+  s.add_runtime_dependency 'timecode', '>= 0'
+  s.add_development_dependency 'rake', '>= 0'
+  s.add_development_dependency 'rspec', '~> 3.5'
 end
